@@ -22,6 +22,8 @@ export interface Stroke {
   pen: PenId;
   size: SizeStep;
   pts: RawPoint[];
+  /** Width multiplier, when the stroke was scaled to fit another pad (wide mode). Absent means 1. */
+  k?: number;
 }
 
 export interface Rect {
@@ -144,7 +146,7 @@ export function fountainFactor(ty: number): number {
 /** The smoothed samples of a stroke with a radius each, by the pen's rule. */
 export function layout(stroke: Stroke): Samples {
   const pts = smooth(stroke.pts);
-  const base = BASE_WIDTH[stroke.size] * PEN_SCALE[stroke.pen];
+  const base = BASE_WIDTH[stroke.size] * PEN_SCALE[stroke.pen] * (stroke.k ?? 1);
   const n = pts.length;
   const x = pts.map((p) => p[0]);
   const y = pts.map((p) => p[1]);
@@ -333,7 +335,28 @@ export function hasInk(strokes: Stroke[]): boolean {
 
 /** Moves and scales strokes (for wide mode and for drawing a saved signature into a new box). */
 export function transformStrokes(strokes: Stroke[], dx: number, dy: number, k = 1): Stroke[] {
-  return strokes.map((s) => ({ ...s, pts: s.pts.map((p) => [(p[0] + dx) * k, (p[1] + dy) * k, p[2], p[3]] as RawPoint) }));
+  return strokes.map((s) => ({ ...s, k: (s.k ?? 1) * k, pts: s.pts.map((p) => [(p[0] + dx) * k, (p[1] + dy) * k, p[2], p[3]] as RawPoint) }));
+}
+
+/**
+ * Strokes moved and scaled to sit inside a pad of the given size, keeping
+ * their shape and relative line weight (for going in and out of wide mode).
+ * Strokes that already fit are left exactly as they are.
+ */
+export function fitStrokes(strokes: Stroke[], width: number, height: number, pad = 16): Stroke[] {
+  const b = strokesBounds(strokes);
+  if (!b) return strokes;
+  if (b.x >= 0 && b.y >= 0 && b.x + b.width <= width && b.y + b.height <= height) return strokes;
+  const k = Math.min(1, (width - pad * 2) / Math.max(1, b.width), (height - pad * 2) / Math.max(1, b.height));
+  const cx = b.x + b.width / 2;
+  const cy = b.y + b.height / 2;
+  // Scale about the ink's center, then put that center in the middle of the pad.
+  return transformStrokes(strokes, -cx, -cy, k).map((s) => ({ ...s, pts: s.pts.map((p) => [p[0] + width / 2, p[1] + height / 2, p[2], p[3]] as RawPoint) }));
+}
+
+/** Scales strokes by k about the origin (into a bigger pad, or back out of it). */
+export function scaleStrokes(strokes: Stroke[], k: number): Stroke[] {
+  return transformStrokes(strokes, 0, 0, k);
 }
 
 /** Rounds stored points so the library JSON stays small (0.1 point, whole ms, force to 0.01). */
@@ -341,6 +364,7 @@ export function compactStroke(s: Stroke): Stroke {
   return {
     pen: s.pen,
     size: s.size,
+    ...(s.k != null && s.k !== 1 ? { k: Math.round(s.k * 1000) / 1000 } : {}),
     pts: s.pts.map((p) => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, Math.round(p[2]), Math.round(p[3] * 100) / 100] as RawPoint),
   };
 }
