@@ -80,7 +80,7 @@ Permissions: only NSPhotoLibraryAddUsageDescription (add-only, asked the first t
 - Subscription group "Signature Maker Pro".
 - `signature_pro_weekly`: auto-renewing weekly, $4.99/week, 3-day free trial (introductory offer). RevenueCat package `$rc_weekly`. Listed first and preselected on the onboarding paywall.
 - `signature_pro_yearly`: auto-renewing yearly, $19.99/year, no trial. RevenueCat package `$rc_annual`.
-- `signature_pro_lifetime`: non-consumable, $24.99 one time. RevenueCat package `$rc_lifetime`. Listed first and preselected on the in-app paywall as "Lifetime, pay once".
+- `signature_pro_lifetime`: non-consumable, $39.99 one time. RevenueCat package `$rc_lifetime`. Listed first and preselected on the in-app paywall as "Lifetime, pay once".
 - RevenueCat: entitlement `pro` (attach all three products), offering `default` with the three packages.
 - Prices and trial text in the app always come from StoreKit.
 

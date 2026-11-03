@@ -2,6 +2,11 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-03: 1.0.0 build 1, lifetime is $39.99 (same branch, no build). Cowork is changing signature_pro_lifetime in App Store Connect.
+  - The app reads every price from StoreKit, including the paywall's legal text (src/offer.ts `disclosureText` takes the store's strings), so no app code changed except the comment on `planOrder` (lifetime is now about two years of yearly, not a little above one; it stays first and preselected in the app). Hardcoded copies updated: store/metadata.md (Pricing), docs/index.html (the Pro FAQ answer and the JSON-LD offer), docs/support.html, docs/design/NOTES.md (the renders' stubbed store), and the test's disclosure example. README.md has no prices. The render harness's stubbed store now says $39.99; the paywall shots are re-rendered with the onboarding work below.
+  - Replaces the build 1 "Noticed" line that described lifetime as $24.99, a little above a year.
+  - Checked: npm test 29 pass; grep finds no 24.99 outside the change log.
+
 - 2026-11-03: 1.0.0 build 1, the icon is option 3, "card" (same branch, no build). Brian's pick.
   - store/icon.js ships `card`: the pen engine's flourish in cream on the deep blue ink (#1D3A8A), the signing line in a lighter blue. Regenerated assets/icon.png (opaque 1024), the splash (light and dark: the blue tile with its corners on the desk colour, 120 points wide), the Android adaptive foreground (the cream stroke; its background is now the blue), assets/favicon.png, docs/icon-512.png, docs/apple-touch-icon.png, docs/og-image.png and docs/design/icon-options.png (now labelled "card (shipped)"). The app.json changes for the Android background and the splash width went in with the previous commit.
   - Website alt text for the icon and the Open Graph image now describes the cream loop on the blue tile. docs/design/NOTES.md, Icon: why card.

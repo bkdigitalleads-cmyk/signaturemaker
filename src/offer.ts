@@ -55,8 +55,8 @@ export function planTypeOf(packageType: string): PlanType | null {
  * The plans shown, in order. Onboarding: weekly first (it carries the free
  * trial), then yearly, then lifetime. In the app: lifetime first ("Lifetime,
  * pay once"), then yearly, then weekly. Someone who arrives with one urgent
- * lease and comes back for a second is buying a tool, and a one-time price
- * a little above a year is the honest best value.
+ * lease and comes back for a second is buying a tool, and utilities sell
+ * one-time prices; lifetime costs about two years of yearly.
  */
 export function planOrder(onboarding: boolean): PlanType[] {
   return onboarding ? ['WEEKLY', 'ANNUAL', 'LIFETIME'] : ['LIFETIME', 'ANNUAL', 'WEEKLY'];

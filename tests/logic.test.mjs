@@ -499,10 +499,10 @@ test('plans: three rows; weekly first and preselected on onboarding, lifetime in
   assert.equal(O.planTypeOf('LIFETIME'), 'LIFETIME');
   assert.equal(O.planTypeOf('MONTHLY'), null);
   assert.equal(O.planTitle('LIFETIME'), 'Lifetime, pay once');
-  const d = O.disclosureText({ weekly: '$4.99', yearly: '$19.99', lifetime: '$24.99', trial: '3 days free' });
+  const d = O.disclosureText({ weekly: '$4.99', yearly: '$19.99', lifetime: '$39.99', trial: '3 days free' });
   assert.match(d, /Weekly \$4\.99\/week .*3 days free/);
   assert.match(d, /Yearly \$19\.99\/year/);
-  assert.match(d, /Lifetime \$24\.99 is a one-time purchase/);
+  assert.match(d, /Lifetime \$39\.99 is a one-time purchase/);
   assert.match(O.disclosureText({}), /lifetime/);
   assert.equal(O.yearlySavingPct(4.99, 19.99), 92);
   assert.equal(O.yearlySavingPct(1, 100), null);
