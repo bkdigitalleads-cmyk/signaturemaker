@@ -12,8 +12,8 @@ const path = require('path');
 //   line     - the sign-here cross and one black stroke swept along the line
 //   card     - the same flourish in paper white on the deep blue ink
 // No pen, no nib, no feather quill.
-// Chosen: flourish (see docs/design/NOTES.md).
-const CHOSEN = 'flourish';
+// Chosen: card (see docs/design/NOTES.md).
+const CHOSEN = 'card';
 
 const ROOT = path.join(__dirname, '..');
 const NEWS = opentype.loadSync(ROOT + '/assets/fonts/Newsreader-Medium.ttf');
@@ -64,7 +64,7 @@ const art = {
   </svg>`,
 };
 
-const LABELS = { flourish: '1  flourish (picked)', line: '2  line', card: '3  card' };
+const LABELS = { flourish: '1  flourish', line: '2  line', card: '3  card (shipped)' };
 
 function textPath(font, text, size, x, y) {
   return font.getPath(text, x, y, size).toPathData(2);
@@ -105,12 +105,15 @@ async function options() {
 
 async function write() {
   const svg = art[CHOSEN]();
-  await sharp(await png(svg, 1024)).flatten({ background: PAPER }).png().toFile(ROOT + '/assets/icon.png');
+  await sharp(await png(svg, 1024)).flatten({ background: BLUE }).png().toFile(ROOT + '/assets/icon.png');
   // Splash and the adaptive foreground: the stroke alone, on clear.
+  // Splash: the blue tile itself, with its corners, centred on the desk colour (light and dark).
+  const tile = await rounded(svg, 512);
+  await sharp(tile).png().toFile(ROOT + '/assets/splash-icon.png');
+  await sharp(tile).png().toFile(ROOT + '/assets/splash-icon-dark.png');
+  // Android adaptive foreground: the cream stroke alone; app.json sets the blue as its background.
   const strokeOnly = (color) => `<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">${engineStroke(FLOURISH, 'fountain', 2.3, color, 5.12, 0, 34)}</svg>`;
-  await sharp(Buffer.from(strokeOnly(BLUE))).resize(512, 512).png().toFile(ROOT + '/assets/splash-icon.png');
-  await sharp(Buffer.from(strokeOnly('#9DB3EE'))).resize(512, 512).png().toFile(ROOT + '/assets/splash-icon-dark.png');
-  await sharp(Buffer.from(strokeOnly(BLUE))).resize(1024, 1024).png().toFile(ROOT + '/assets/android-icon-foreground.png');
+  await sharp(Buffer.from(strokeOnly(PAPER))).resize(1024, 1024).png().toFile(ROOT + '/assets/android-icon-foreground.png');
   await sharp(await png(svg, 48)).png().toFile(ROOT + '/assets/favicon.png');
   await sharp(await png(svg, 512)).png().toFile(ROOT + '/docs/icon-512.png');
   await sharp(await png(svg, 180)).png().toFile(ROOT + '/docs/apple-touch-icon.png');

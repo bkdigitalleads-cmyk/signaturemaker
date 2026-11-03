@@ -55,11 +55,11 @@ Migraine Log's polish pass (docs/design/NOTES.md there) named the tells: too man
 
 Three options in `icon-options.png`, each big and at 60 px on a light and a dark wallpaper, drawn by `store/icon.js` (`node icon.js options`; `node icon.js` writes `assets/` and the website images). Every stroke is drawn by the app's own pen engine (the Fountain pen), so the icon is the product.
 
-1. flourish (picked): one confident deep-blue stroke, a tall loop that runs out into a long tail, over a faint signing line, on paper. It reads at 60 px on both wallpapers and says "a signature" without a pen.
+1. flourish: one confident deep-blue stroke, a tall loop that runs out into a long tail, over a faint signing line, on paper.
 2. line: the sign-here cross and one black stroke along the line. Clear, but heavier and closer to a generic form icon.
-3. card: the flourish in paper white on the deep blue. The strongest at 60 px, but the brief asks for ink on paper, and blue tiles are everywhere in Productivity.
+3. card (shipped, Brian's pick on Nov 3): the same flourish in cream on the deep blue ink, with the signing line a lighter blue. It is the strongest of the three at 60 px on both wallpapers, and it stands out on a home screen full of white tiles. The blue is the app's own accent, the one that marks the primary action, so the icon and the Save signature button are the same colour.
 
-No pen clip art, no nib, no feather quill. The splash shows the stroke alone on the desk colour (a lighter blue in dark mode).
+No pen clip art, no nib, no feather quill. The splash is the blue tile itself, with its corners, centred on the desk colour in light and dark. The Android adaptive icon is the cream stroke on the blue.
 
 ## Checklist
 
@@ -71,4 +71,4 @@ No pen clip art, no nib, no feather quill. The splash shows the stroke alone on 
 - [x] Dynamic Type: body text scales; titles and buttons cap at 1.3 to 1.5x. Designed for, not yet checked on a device.
 - [x] Copy voice grep-checked.
 - [x] `after/*.png` for every screen in the brief, re-rendered after the polish pass.
-- [x] Icon options drawn; flourish picked and written to `assets/` and the website images.
+- [x] Icon options drawn; card shipped and written to `assets/`, the splash and the website images.

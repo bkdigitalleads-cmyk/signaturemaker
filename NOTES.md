@@ -2,6 +2,11 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-03: 1.0.0 build 1, the icon is option 3, "card" (same branch, no build). Brian's pick.
+  - store/icon.js ships `card`: the pen engine's flourish in cream on the deep blue ink (#1D3A8A), the signing line in a lighter blue. Regenerated assets/icon.png (opaque 1024), the splash (light and dark: the blue tile with its corners on the desk colour, 120 points wide), the Android adaptive foreground (the cream stroke; its background is now the blue), assets/favicon.png, docs/icon-512.png, docs/apple-touch-icon.png, docs/og-image.png and docs/design/icon-options.png (now labelled "card (shipped)"). The app.json changes for the Android background and the splash width went in with the previous commit.
+  - Website alt text for the icon and the Open Graph image now describes the cream loop on the blue tile. docs/design/NOTES.md, Icon: why card.
+  - Checked: every generated image looked at (the tile, the 60 px versions on light and dark wallpapers, the splash, the Open Graph image).
+
 - 2026-11-03: 1.0.0 build 1, the last setup values (same branch, PR #1, not merged, no build).
   - app.json `extra.eas.projectId` 588561f4-8e20-4bdd-9dfc-742100ee3ce7 (bkdeveloper123/signaturemaker) and `extra.revenueCatApiKeyIos` (the public `appl_` SDK key, so purchases are on in builds). eas.json `ascAppId` 6830028405 was already in. No TODO_COWORK placeholders are left.
   - CLAUDE.md and store/metadata.md say they are set; the app.json check in tests/logic.test.mjs now expects the real project id and an `appl_` key.
