@@ -104,12 +104,12 @@ On first launch: three short screens that show the app (a signature being drawn,
 To test signing with any PDF: open the Files app (or Mail) on the test device, tap any PDF, tap Share and choose Signature Maker; or in the app, open Documents and tap Open a PDF. Tap Signature (the signature from onboarding is already there; if it was skipped, the app asks you to draw one first), drag it onto the page, pinch or pull its corner to resize, then tap Done signing. The signed copy appears in Documents with Open and Share. To test a signature image: on Create, draw with a finger, tap Save signature, and on the export screen tap Share Transparent PNG.
 
 ## Screenshots (store/screenshots/, made by store/screenshots.js from the renders)
-6.9 inch at 1320x2868 and 6.5 inch at 1242x2688, six each, in this order. The caption at the top of each carries the search terms in order of importance, in Newsreader on the warm paper background, with the screen under it; no device frames, no gradients, no emoji.
-1. "Signature Maker": a drawn signature on the canvas
-2. "Sign Documents & PDFs": the signature placed on a lease
-3. "Transparent PNG Signature": the export on the checkerboard
-4. "Type It in 12 Script Styles": the font list
-5. "Initials, Date and Text": the stamps on a page
-6. "Private. Works Offline.": the About line in Settings
+6.9 inch at 1320x2868 and 6.5 inch at 1242x2688, six each, in this order. The caption at the top of each carries the search terms in order of importance, in Newsreader on the warm paper background; no device frames, no gradients, no emoji. Shots 2, 5 and 6 are close-ups cut from the screen, so the signature, the date and the stamps read at search-result size.
+1. "Signature Maker": a drawn signature in blue ink on the canvas, the pen row under it (whole screen)
+2. "Sign Documents & PDFs": page 2 of a lease, the signature on the tenant line with the date beside it, and the Signature, Initials, Date and Text tools with Done signing under the page (close-up)
+3. "Transparent PNG Signature": "Jordan, black ink" on the checkerboard (whole screen)
+4. "Type It in 12 Script Styles": the font list showing the name (whole screen)
+5. "Initials, Date and Text": page 1's fields, initials on the Tenant initials line, the date beside them and the pet's name typed in, with the tools under it (close-up)
+6. "Private. Works Offline.": Settings from Help to the whole About card with the legal line and "No account" (close-up; the delete button is out of frame)
 
 docs/design/after has every screen for reference.

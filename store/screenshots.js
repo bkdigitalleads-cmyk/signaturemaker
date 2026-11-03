@@ -7,8 +7,11 @@ const path = require('path');
 // or a folder of the same names at full colour: `node screenshots.js <dir>`).
 // Each is the warm paper of the app's desk, a short caption at the top in the
 // app's own serif (Newsreader Medium, drawn as outlines so it looks the same
-// anywhere), and the screen under it with its own rounded corners. No device
-// frames, no gradients, no emoji. Captions carry the search terms in order of
+// anywhere), and under it either the whole screen with its own rounded
+// corners, or close-ups cut from a screen (`cards`): the signed page large
+// enough that the signature and the date read at search-result size, with the
+// page's tool row under it, or the About card. No device frames, no
+// gradients, no emoji. Captions carry the search terms in order of
 // importance. Writes store/screenshots/6.9/ (1320x2868) and 6.5/ (1242x2688).
 
 const ROOT = path.join(__dirname, '..');
@@ -20,11 +23,11 @@ const EDGE = 'rgba(26,26,30,0.10)';
 
 const SHOTS = [
   { file: '04-pen-row-fountain', caption: 'Signature Maker' },
-  { file: '18-placement-resize', caption: 'Sign Documents & PDFs' },
+  { cards: ['37-close-sign', '38-close-sign-tools'], caption: 'Sign Documents & PDFs' },
   { file: '09-export-checkerboard', caption: 'Transparent PNG Signature' },
   { file: '07-type-fonts', caption: 'Type It in 12 Script Styles' },
-  { file: '19-stamps', caption: 'Initials, Date and Text' },
-  { file: '26-settings-about', caption: 'Private. Works Offline.' },
+  { cards: ['39-close-stamps', '40-close-stamps-tools'], caption: 'Initials, Date and Text' },
+  { cards: ['41-close-about'], caption: 'Private. Works Offline.' },
 ];
 
 const SIZES = [
@@ -65,9 +68,40 @@ function captionSvg(text, width, top, maxSize) {
   return { paths, bottom: top + size + (lines.length - 1) * lineH + size * 0.3 };
 }
 
+/** Close-ups stacked under the caption: as wide as the frame allows, centred in the space left. */
+async function cardsShot(shot, size, k, cap) {
+  const gap = Math.round(56 * k);
+  const top0 = Math.round(Math.max(cap.bottom + 70 * k, 470 * k));
+  const availH = size.height - top0 - Math.round(90 * k);
+  const metas = await Promise.all(shot.cards.map((c) => sharp(path.join(SRC, `${c}.png`)).metadata()));
+  let w = Math.round(1180 * k);
+  const heightAt = (wd) => metas.reduce((t, m) => t + Math.round((m.height / m.width) * wd), 0) + gap * (metas.length - 1);
+  if (heightAt(w) > availH) w = Math.floor(w * (availH / heightAt(w)));
+  let y = top0 + Math.round((availH - heightAt(w)) / 2);
+  const left = Math.round((size.width - w) / 2);
+  const r = Math.round(40 * k);
+  const comps = [];
+  let edges = '';
+  for (let i = 0; i < shot.cards.length; i++) {
+    const h = Math.round((metas[i].height / metas[i].width) * w);
+    const img = await sharp(path.join(SRC, `${shot.cards[i]}.png`)).resize(w, h, { fit: 'fill', kernel: 'lanczos3' }).png().toBuffer();
+    const mask = Buffer.from(`<svg width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${r}" fill="#fff"/></svg>`);
+    comps.push({ input: await sharp(img).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer(), left, top: y });
+    edges += `<rect x="${left - 1.5}" y="${y - 1.5}" width="${w + 3}" height="${h + 3}" rx="${r + 1.5}" fill="${EDGE}"/>`;
+    y += h + gap;
+  }
+  const bg = `<svg width="${size.width}" height="${size.height}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${size.width}" height="${size.height}" fill="${DESK}"/>
+    ${cap.paths}
+    ${edges}
+  </svg>`;
+  return sharp(Buffer.from(bg)).composite(comps).flatten({ background: DESK }).png({ compressionLevel: 9 }).toBuffer();
+}
+
 async function one(shot, size) {
   const k = size.width / 1320;
   const cap = captionSvg(shot.caption, size.width, Math.round(150 * k), Math.round(118 * k));
+  if (shot.cards) return cardsShot(shot, size, k, cap);
   // The screen fills the rest: centred, its top under the caption, its foot just inside the edge.
   const top = Math.round(Math.max(cap.bottom + 70 * k, 470 * k));
   const screenH = size.height - top - Math.round(70 * k);

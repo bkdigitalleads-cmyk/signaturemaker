@@ -33,11 +33,14 @@ Motion is quiet: sheets and modals fade; feedback is by touch (a success haptic 
 - Typed (`07-type-fonts`): the name, its preview on paper, the inks and the fonts as rows showing the name; initials (`08-initials`).
 - Export (`09-export-checkerboard`, `10-export-letter`, `11-export-marked`, the second free export after closing the paywall).
 - Library (`12-library`, `13-library-initials`, `14-library-actions`).
-- Documents (`15-documents-empty`, `16-document-pages`, `17-add-signature` with the default first, `18-placement-resize` with the corner handle being pulled, `19-stamps` with the signature, the printed name, the date and initials on one page, `20-signed`, `21-documents`).
-- Paywalls (`22-paywall-onboarding` with the person's own signature at the top, Weekly and the trial; `23-paywall-in-app` from the second export with Lifetime first), the Claim sheet after the onboarding X (`24-claim`), Settings (`25-settings`, `26-settings-about`).
-- Onboarding (`27` to `35`): the signature drawing itself in (`27` mid-draw, `28` finished), the transparent PNG next to the letter (`29`), the lease (`30`), what you need today (`31`), Sign here empty and signed (`32`, `33`), the trial and the reminder (`34`, `35`).
+- Documents (`15-documents-empty`, `16-document-pages`, `17-add-signature` with the default first, `18-placement-resize` with the corner handle being pulled, `19-stamps` with initials, the date and a pet's name in page 1's fields, `20-page-signed` with the signature and the date on page 2's tenant line, `21-signed`, `22-documents`).
+- Paywalls (`23-paywall-onboarding` with the person's own signature at the top, Weekly and the trial; `24-paywall-in-app` from the second export with Lifetime first), the Claim sheet after the onboarding X (`25-claim`), Settings (`26-settings`, `27-settings-about`).
+- Onboarding (`28` to `36`): the signature drawing itself in (`28` mid-draw, `29` finished), the transparent PNG next to the letter (`30`), the lease (`31`), what you need today (`32`), Sign here empty and signed (`33`, `34`), the trial and the reminder (`35`, `36`).
+- Close-ups for the store screenshots (`37` to `41`), cut from the 5x renders: page 2 around the tenant line and its tool row, page 1's fields and its tool row, and Settings from the Help heading to the end of the About card.
 
-The store screenshots (`store/screenshots/`, by `store/screenshots.js`) are six of these screens on the desk colour with a caption in Newsreader above each: no device frames, gradients or emoji.
+The signatures in the renders are named as a person would name them ("Jordan, black ink", "Jordan, script", "Jordan, blue ink"): the harness sets the name the app would otherwise suggest ("Signature, black ink"), which anyone can change with Rename. The free and Pro runs start past onboarding, which has its own run, so the first signature saved is the one shown.
+
+The store screenshots (`store/screenshots/`, by `store/screenshots.js`) put a caption in Newsreader on the desk colour above either a whole screen (1, 3, 4) or close-ups (2, 5, 6), so the signature, the date and the stamps read at search-result size: no device frames, gradients or emoji.
 
 ## Onboarding (Nov 3 follow-up)
 
