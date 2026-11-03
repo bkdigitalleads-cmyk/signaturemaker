@@ -36,7 +36,7 @@ export default function Library({ onCreate, onExport, onInitials }: { onCreate: 
   const act = (fn: (s: Signature) => void) => () => {
     const s = open;
     setOpen(null);
-    if (s) setTimeout(() => fn(s), 250);
+    if (s) setTimeout(() => fn(s), 400);
   };
 
   return (

@@ -87,6 +87,9 @@ interface AppState {
   setDocOpen: (v: boolean) => void;
   notice: string | null;
   say: (text: string) => void;
+  /** A full-screen modal that hosts its own paywall is open (iOS shows one modal at a time from a given screen). */
+  nestedPaywall: boolean;
+  setNestedPaywall: (v: boolean) => void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -106,6 +109,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [notice, setNotice] = useState<string | null>(null);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const docOpenRef = useRef(false);
+  const [nestedPaywall, setNestedPaywall] = useState(false);
 
   const say = useCallback((text: string) => {
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
@@ -281,8 +285,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setDocOpen,
       notice,
       say,
+      nestedPaywall,
+      setNestedPaywall,
     }),
-    [ready, prefs, setPrefs, isPro, setIsPro, testBuild, actFree, setActFree, paywall, askPro, hidePaywall, usage, countUsage, resetUsage, library, setLibrary, recent, addRecentDoc, setRecent, setDocOpen, notice, say]
+    [ready, prefs, setPrefs, isPro, setIsPro, testBuild, actFree, setActFree, paywall, askPro, hidePaywall, usage, countUsage, resetUsage, library, setLibrary, recent, addRecentDoc, setRecent, setDocOpen, notice, say, nestedPaywall]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -30,6 +30,8 @@ import Glyph from '../ui/Glyph';
 import { Caption, Drawer, Field, GlyphButton, InkButton, Panel, Pill, QuietButton, Row, Tap, TopBar } from '../ui/Kit';
 import { MODAL_ANIMATION, placeHaptic, savedHaptic, tick } from '../ui/motion';
 import Create from './Create';
+import PaywallModal from './Paywall';
+import { PRIVACY_URL } from '../links';
 
 let seq = 0;
 const pid = () => `p${Date.now().toString(36)}${(seq++).toString(36)}`;
@@ -44,7 +46,7 @@ const pid = () => `p${Date.now().toString(36)}${(seq++).toString(36)}`;
 export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => void }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { library, setLibrary, isPro, askPro, usage, countUsage, prefs, recent, addRecentDoc, setDocOpen, say } = useApp();
+  const { library, isPro, askPro, usage, countUsage, prefs, recent, addRecentDoc, setDocOpen, say, setNestedPaywall } = useApp();
   const [page, setPage] = useState(0);
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -54,6 +56,11 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
   const [askFormat, setAskFormat] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Finished | null>(null);
+
+  useEffect(() => {
+    setNestedPaywall(creating != null);
+    return () => setNestedPaywall(false);
+  }, [creating, setNestedPaywall]);
 
   useEffect(() => {
     setDocOpen(result == null);
@@ -302,7 +309,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
           <QuietButton theme={theme} glyph="plus" label={picker === 'initials' ? 'Make initials' : 'New signature'} onPress={() => {
             const k = picker;
             setPicker(null);
-            setTimeout(() => setCreating(k === 'initials' ? { initialsFor: defaultSignature(library)! } : {}), 250);
+            setTimeout(() => setCreating(k === 'initials' ? { initialsFor: defaultSignature(library)! } : {}), 400);
           }} />
         </ScrollView>
       </Drawer>
@@ -328,6 +335,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
             />
           ) : null}
         </View>
+        <PaywallModal privacyUrl={PRIVACY_URL} nested />
       </Modal>
     </View>
   );

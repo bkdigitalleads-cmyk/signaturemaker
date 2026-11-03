@@ -1,20 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as Linking from 'expo-linking';
-import { useTheme, UI_FONT_FILES, type, space } from './src/theme';
+import { useTheme, UI_FONT_FILES } from './src/theme';
 import { SCRIPT_FONT_FILES } from './src/fontFiles';
-import { AppProvider, useApp } from './src/state';
+import { AppProvider, useApp, ONBOARDED_KEY } from './src/state';
 import type { Signature } from './src/library';
 import { OpenDoc, openIncoming } from './src/documents';
-import { sweepCache } from './src/store';
+import { kvGet, kvSet, sweepCache } from './src/store';
+import { firstTabFor } from './src/rules';
+import { maybeRequestReviewOnLaunch } from './src/reviews';
+import { PRIVACY_URL } from './src/links';
 import Create from './src/screens/Create';
 import Library from './src/screens/Library';
 import Export from './src/screens/Export';
 import Documents from './src/screens/Documents';
 import Sign from './src/screens/Sign';
+import Settings from './src/screens/Settings';
+import PaywallModal from './src/screens/Paywall';
+import Welcome, { NeedStep, TrialSteps } from './src/screens/Welcome';
 import TabBar, { Tab, TAB_BAR_HEIGHT } from './src/ui/TabBar';
 import { Toast } from './src/ui/Kit';
 
@@ -24,15 +30,53 @@ type Over = { name: 'initials'; sig: Signature } | { name: 'export'; sig: Signat
 function Shell() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { ready, notice, say } = useApp();
+  const { ready, notice, say, isPro, library, askPro, prefs } = useApp();
   const [tab, setTab] = useState<Tab>('create');
   const [over, setOver] = useState<Over>(null);
   const overRef = useRef(over);
   overRef.current = over;
+  const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  // New installs: three value screens, what you need today, the trial and reminder screens, then the paywall.
+  const [step, setStep] = useState<'welcome' | 'need' | 'trial' | 'paywall'>('welcome');
+  const paywallOpened = useRef(false);
+  const launchAsked = useRef(false);
 
   useEffect(() => {
     sweepCache();
   }, []);
+
+  useEffect(() => {
+    if (!ready || onboarded !== null) return;
+    (async () => {
+      if ((await kvGet(ONBOARDED_KEY)) === '1') return setOnboarded(true);
+      // Anyone who already saved a signature, or is Pro, has used the app: no onboarding.
+      if (isPro || library.length > 0) {
+        kvSet(ONBOARDED_KEY, '1').catch(() => {});
+        return setOnboarded(true);
+      }
+      setOnboarded(false);
+    })().catch(() => setOnboarded(true)); // fail open: never trap anyone
+  }, [ready, onboarded, isPro, library.length]);
+
+  // Once per launch, after onboarding: the "later calendar day" rating trigger (never while a document is open).
+  useEffect(() => {
+    if (onboarded && !launchAsked.current && overRef.current?.name !== 'sign') {
+      launchAsked.current = true;
+      maybeRequestReviewOnLaunch();
+    }
+  }, [onboarded]);
+
+  const openOnboardingPaywall = () => {
+    if (paywallOpened.current) return;
+    paywallOpened.current = true;
+    setStep('paywall');
+    // When the onboarding paywall closes (purchase or the close button), onboarding is done.
+    askPro('pro').then(() => {
+      kvSet(ONBOARDED_KEY, '1').catch(() => {});
+      setTab(firstTabFor(prefs.need));
+      setOnboarded(true);
+    });
+  };
 
   // "Open in" from Mail or Files: iOS copies the file into the app and opens it with the file URL.
   useEffect(() => {
@@ -61,7 +105,19 @@ function Shell() {
     return () => sub.remove();
   }, [ready]);
 
-  if (!ready) return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
+  if (!ready || onboarded === null) return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
+
+  if (!onboarded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: insets.top }}>
+        <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+        {step === 'welcome' && <Welcome onDone={() => setStep('need')} />}
+        {step === 'need' && <NeedStep onDone={() => setStep('trial')} />}
+        {(step === 'trial' || step === 'paywall') && <TrialSteps onDone={openOnboardingPaywall} />}
+        <PaywallModal privacyUrl={PRIVACY_URL} onboarding />
+      </View>
+    );
+  }
 
   let body: React.ReactNode;
   if (over?.name === 'sign') body = <Sign key={over.doc.id} doc={over.doc} onClose={() => setOver(null)} />;
@@ -91,9 +147,13 @@ function Shell() {
   else if (tab === 'documents') body = <Documents onOpen={(doc) => setOver({ name: 'sign', doc })} />;
   else
     body = (
-      <View style={{ flex: 1, padding: space.l }}>
-        <Text style={[type.title, { color: theme.ink }]}>Settings</Text>
-      </View>
+      <Settings
+        onReplayOnboarding={() => {
+          paywallOpened.current = false;
+          setStep('welcome');
+          setOnboarded(false);
+        }}
+      />
     );
 
   return (
@@ -102,6 +162,7 @@ function Shell() {
       <View style={{ flex: 1 }}>{body}</View>
       {over == null ? <TabBar theme={theme} tab={tab} onTab={setTab} /> : null}
       <Toast theme={theme} text={notice} bottom={(over == null ? TAB_BAR_HEIGHT : 0) + insets.bottom} />
+      <PaywallModal privacyUrl={PRIVACY_URL} />
     </View>
   );
 }
