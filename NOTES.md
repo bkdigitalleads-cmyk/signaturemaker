@@ -2,6 +2,13 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-03: 1.0.0 build 1, export (same branch, no build).
+  - Export screen (src/screens/Export.tsx), opened right after Save signature and from the Library: the real file is rendered as you choose and shown on a checkerboard (so a transparent PNG visibly is transparent) or at the foot of a mock letter, so you see it in context. Signature or initials. Transparent PNG (the default), PNG on white, JPG on white; 2x or 3x with the pixel size shown. Share (the share sheet: Mail, Messages, Files and more), Save to Photos (add-only access, asked the first time), Copy (the clipboard).
+  - Files (src/render.ts): Skia CPU surface with an alpha channel, the ink's bounds plus a small margin (4% of the longer side, 4 to 16 points, snapped to whole points), at 2x or 3x; PNG from makeImageSnapshot, JPG at quality 92 on white.
+  - Free and Pro (src/gates.ts): the first export is free and clean. After that a free export opens the paywall first; buying gives a clean file, closing it gives the file with a small "Made with Signature Maker" line under the ink in the bottom corner. The preview shows the mark whenever the file will carry it, and says so in one line.
+  - After an export: a success haptic and "Saved. It has a transparent background." (or "Saved." on white, "Copied." for the clipboard). The first export asks for a rating (src/reviews.ts, once ever, never while a document is open).
+  - Checked: npx tsc --noEmit clean.
+
 - 2026-11-03: 1.0.0 build 1, the signature canvas (same branch, no build).
   - Create tab (src/screens/Create.tsx) is the hero: "Sign here" over a wide sheet of paper with a thin signing line and a small cross, the pen row, and one "Save signature" button (64 pt). Undo, redo, clear and Wide sit quietly under the pad.
   - Pad (src/ui/Pad.tsx): Skia draws the pen engine's filled outlines; touches come from the plain responder on a view over the canvas, so points stay in the pad's own space. Only the live stroke is re-outlined while drawing (once per frame); finished strokes are outlined once. Apple Pencil force drives the Ink pen when the screen reports it.

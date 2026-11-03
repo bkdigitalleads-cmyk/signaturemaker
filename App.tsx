@@ -9,11 +9,12 @@ import { AppProvider, useApp } from './src/state';
 import type { Signature } from './src/library';
 import Create from './src/screens/Create';
 import Library from './src/screens/Library';
+import Export from './src/screens/Export';
 import TabBar, { Tab, TAB_BAR_HEIGHT } from './src/ui/TabBar';
 import { Toast } from './src/ui/Kit';
 
 /** A screen over the tabs. */
-type Over = { name: 'initials'; sig: Signature } | null;
+type Over = { name: 'initials'; sig: Signature } | { name: 'export'; sig: Signature } | null;
 
 function Shell() {
   const theme = useTheme();
@@ -24,7 +25,8 @@ function Shell() {
   if (!ready) return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
 
   let body: React.ReactNode;
-  if (over?.name === 'initials')
+  if (over?.name === 'export') body = <Export sig={over.sig} onBack={() => setOver(null)} />;
+  else if (over?.name === 'initials')
     body = (
       <Create
         initialsFor={over.sig}
@@ -38,13 +40,14 @@ function Shell() {
   else if (tab === 'create')
     body = (
       <Create
-        onSaved={() => {
+        onSaved={(sig) => {
           say('Saved to your library.');
           setTab('library');
+          setOver({ name: 'export', sig });
         }}
       />
     );
-  else if (tab === 'library') body = <Library onCreate={() => setTab('create')} onExport={() => {}} onInitials={(sig) => setOver({ name: 'initials', sig })} />;
+  else if (tab === 'library') body = <Library onCreate={() => setTab('create')} onExport={(sig) => setOver({ name: 'export', sig })} onInitials={(sig) => setOver({ name: 'initials', sig })} />;
   else
     body = (
       <View style={{ flex: 1, padding: space.l }}>
