@@ -13,6 +13,7 @@
     "expo-haptics": "~57.0.1",
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.13",
+    "expo-mail-composer": "~57.0.2",
     "expo-media-library": "~57.0.5",
     "expo-notifications": "~57.0.10",
     "expo-sharing": "~57.0.11",

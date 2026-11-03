@@ -9,7 +9,8 @@
  * placement.ts.
  */
 import { PDFDocument, PDFFont, StandardFonts, degrees, rgb } from 'pdf-lib';
-import { boxToPdf, PageBox, textToPdf } from './placement.ts';
+import { boxToPdf, textToPdf } from './placement.ts';
+import type { PageBox } from './placement.ts';
 
 export interface ImageItem {
   kind: 'image';

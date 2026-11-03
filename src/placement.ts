@@ -154,3 +154,40 @@ export function scaleBox<T extends { x: number; y: number; width: number; height
 export function shortDate(ms: number, locale?: string): string {
   return new Date(ms).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
+
+export type Grab = { id: string; mode: 'move' | 'resize' };
+
+/**
+ * What a touch at a display point grabs: the bottom-right handle of the
+ * selected placement resizes it; otherwise the topmost placement under the
+ * touch (with a little slop for small ones) moves. Null on empty paper.
+ */
+export function hitTest(placements: Placement[], page: number, x: number, y: number, opts: { selectedId?: string | null; handle: number; slop: number }): Grab | null {
+  const on = placements.filter((p) => p.page === page);
+  const sel = on.find((p) => p.id === opts.selectedId);
+  if (sel) {
+    const hx = sel.x + sel.width;
+    const hy = sel.y + sel.height;
+    if (Math.abs(x - hx) <= opts.handle && Math.abs(y - hy) <= opts.handle) return { id: sel.id, mode: 'resize' };
+  }
+  for (let i = on.length - 1; i >= 0; i--) {
+    const p = on[i];
+    if (x >= p.x - opts.slop && x <= p.x + p.width + opts.slop && y >= p.y - opts.slop && y <= p.y + p.height + opts.slop) return { id: p.id, mode: 'move' };
+  }
+  return null;
+}
+
+/** Resize from the bottom-right handle: the top left stays, the aspect is kept, `dx`/`dy` in display points. */
+export function resizeBox<T extends { x: number; y: number; width: number; height: number }>(b: T, dx: number, dy: number): T {
+  const aspect = b.width > 0 && b.height > 0 ? b.width / b.height : 1;
+  // Follow whichever way the finger went further, in width terms.
+  const dw = Math.abs(dx) >= Math.abs(dy * aspect) ? dx : dy * aspect;
+  const width = Math.max(4, b.width + dw);
+  return { ...b, width, height: width / aspect };
+}
+
+/** Moves a placement to the front (drawn last, grabbed first). */
+export function toFront(placements: Placement[], id: string): Placement[] {
+  const p = placements.find((x) => x.id === id);
+  return p ? [...placements.filter((x) => x.id !== id), p] : placements;
+}
