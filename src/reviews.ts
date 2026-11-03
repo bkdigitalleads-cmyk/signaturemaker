@@ -1,19 +1,17 @@
 import * as StoreReview from 'expo-store-review';
 import { kvGet, kvSet } from './store';
-import { dayKey, reviewAllowed } from './rules';
+import { dayKey, launchReview, ReviewTrigger, shouldAsk } from './rules';
+
+export type { ReviewTrigger } from './rules';
 
 /**
- * App Store rating asks, at moments of value. Each trigger fires at most
- * once ever, at most one prompt per launch, never while a document is open
- * for signing, and StoreKit still decides whether the prompt is shown (it
- * caps it at 3 a year).
- *   firstExport   - the first successful signature export
- *   firstDocShare - the first signed document shared or saved
- *   laterDay      - the first launch on a later calendar day than install
+ * App Store rating asks, at moments the person just got something (the
+ * triggers are listed in rules.ts). Each fires at most once ever, at most
+ * one prompt per launch, never while a document is open, and StoreKit
+ * still decides whether the prompt is shown (it caps it at 3 a year). The
+ * decisions are pure functions in rules.ts, checked by `npm test`.
  * Same engine as Migraine Log, Image to Text, Pumping and Odo 1.0.6.
  */
-export type ReviewTrigger = 'firstExport' | 'firstDocShare' | 'laterDay';
-
 const triggerKey = (t: ReviewTrigger) => `review.${t}`;
 const INSTALL_DAY_KEY = 'review.installDay';
 
@@ -31,8 +29,8 @@ export async function maybeRequestReview(trigger: ReviewTrigger): Promise<void> 
   launchState = 'checking';
   try {
     const used = (await kvGet(triggerKey(trigger))) != null;
-    if (!reviewAllowed({ docOpen: docOpen(), askedThisLaunch: false, triggerUsed: used })) return;
-    if (!(await StoreReview.hasAction())) return;
+    const storeCanAsk = await StoreReview.hasAction();
+    if (!shouldAsk({ docOpen: docOpen(), askedThisLaunch: false, triggerUsed: used, storeCanAsk })) return;
     await kvSet(triggerKey(trigger), '1');
     launchState = 'asked';
     setTimeout(() => {
@@ -52,12 +50,9 @@ export async function maybeRequestReviewOnLaunch(): Promise<void> {
   launchChecked = true;
   try {
     const today = dayKey(Date.now());
-    const installDay = await kvGet(INSTALL_DAY_KEY);
-    if (!installDay) {
-      await kvSet(INSTALL_DAY_KEY, today);
-      return;
-    }
-    if (installDay !== today) await maybeRequestReview('laterDay');
+    const what = launchReview(await kvGet(INSTALL_DAY_KEY), today);
+    if (what === 'record') await kvSet(INSTALL_DAY_KEY, today);
+    else if (what === 'laterDay') await maybeRequestReview('laterDay');
   } catch {
     // never let review plumbing get in the way
   }

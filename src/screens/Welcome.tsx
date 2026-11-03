@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, radius, space, type, Theme } from '../theme';
 import { useApp } from '../state';
@@ -10,20 +10,24 @@ import { trialLength } from '../offer';
 import type { Need } from '../rules';
 import Glyph from '../ui/Glyph';
 import { InkButton, Panel, Tap } from '../ui/Kit';
+import { DrawShow, ExportShow, SignShow } from '../ui/Showcase';
 
 /**
  * First launch, in this order (App.tsx runs it):
- *   1-3. three value screens, written for the outcome
+ *   1-3. three value screens, each showing the product itself (drawn by the
+ *        app's own renderer): a signature drawing itself in, the same
+ *        signature as a transparent PNG and on a letter, and on a lease
  *   4.   "What do you need today?" (only picks the first screen after this)
+ *   5.   "Sign here": the real canvas; Continue saves it as the default (Skip is fine)
  *   a.   TrialSteps "Try it free"                      } only when RevenueCat says this
  *   b.   TrialSteps "We'll remind you the day before"  } Apple ID can get the free trial
  *   then the onboarding paywall (close button after 3 seconds).
- * No name or email is asked. Full-bleed type, no illustrations.
+ * No name or email is asked.
  */
-const PAGES = [
-  { title: 'Draw a signature that looks like yours.', line: 'Smooth ink that thickens and thins like a real pen, with a finger or Apple Pencil. Or type it in a script you like.' },
-  { title: 'Export it as a transparent PNG.', line: 'Only the ink, no background, ready for an email footer, Word, Canva or a form.' },
-  { title: 'Sign any PDF on your phone.', line: 'Open it from Mail or Files, place your signature, send it back. Nothing is uploaded.' },
+const PAGES: { title: string; line: string; show: 'draw' | 'export' | 'sign' }[] = [
+  { title: 'Draw a signature that looks like yours.', line: 'The ink follows your hand, with a finger or Apple Pencil.', show: 'draw' },
+  { title: 'Save it as a transparent PNG.', line: 'Only the ink, ready for an email, Word, Canva or a form.', show: 'export' },
+  { title: 'Sign a PDF on your phone.', line: 'Open it from Mail or Files, sign on the line, send it back.', show: 'sign' },
 ];
 
 interface TrialOffer {
@@ -55,8 +59,12 @@ export default function Welcome({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     trialOffer();
   }, []);
+  const { width } = useWindowDimensions();
   const next = () => (step < PAGES.length - 1 ? setStep(step + 1) : onDone());
-  return <Page theme={theme} title={PAGES[step].title} line={PAGES[step].line} dots={{ count: PAGES.length, active: step }} button="Continue" onPress={next} />;
+  const p = PAGES[step];
+  const w = width - space.l * 2;
+  const visual = p.show === 'draw' ? <DrawShow theme={theme} width={w} /> : p.show === 'export' ? <ExportShow theme={theme} width={w} /> : <SignShow theme={theme} width={w} />;
+  return <Page key={step} theme={theme} title={p.title} line={p.line} visual={visual} dots={{ count: PAGES.length, active: step }} button="Continue" onPress={next} />;
 }
 
 const NEEDS: { id: Need; label: string; sub: string }[] = [
@@ -151,7 +159,7 @@ export function TrialSteps({ onDone }: { onDone: () => void }) {
     <Page
       theme={theme}
       title="We’ll remind you the day before it ends."
-      line="One notification, on this phone. Nothing else, ever."
+      line="It is the only notification the app sends."
       button="Continue"
       waiting={waiting}
       onPress={async () => {
@@ -174,10 +182,13 @@ function Page({
   onPress,
   waiting = false,
   noPayment = false,
+  visual,
 }: {
   theme: Theme;
   title: string;
   line?: string;
+  /** The product, shown above the words. */
+  visual?: React.ReactNode;
   dots?: { count: number; active: number };
   button: string;
   onPress: () => void;
@@ -187,7 +198,8 @@ function Page({
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.container, { backgroundColor: theme.bg, paddingBottom: Math.max(insets.bottom, space.l) }]}>
-      <View style={styles.words}>
+      {visual ? <View style={styles.visual}>{visual}</View> : null}
+      <View style={visual ? styles.wordsUnder : styles.words}>
         <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header">
           {title}
         </Text>
@@ -216,6 +228,8 @@ function Page({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   words: { flex: 1, justifyContent: 'center', paddingHorizontal: space.xl },
+  visual: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.l, paddingTop: space.xl },
+  wordsUnder: { paddingHorizontal: space.xl, paddingTop: space.xl, paddingBottom: space.xl },
   listPage: { flex: 1, paddingTop: space.xxl, paddingHorizontal: space.l },
   line: { marginTop: space.m },
   need: { flexDirection: 'row', alignItems: 'center', gap: space.m, minHeight: 68, paddingHorizontal: space.l, paddingVertical: space.m },

@@ -22,6 +22,7 @@ const L = await import('../src/library.ts');
 const T = await import('../src/fonts.ts');
 const O = await import('../src/offer.ts');
 const U = await import('../src/rules.ts');
+const SM = await import('../src/sample.ts');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const close = (a, b, eps = 1e-6, msg) => assert.ok(Math.abs(a - b) <= eps, msg ?? `${a} is not within ${eps} of ${b}`);
@@ -520,6 +521,96 @@ test('rating prompt: never while a document is open, once per launch, each trigg
   assert.match(U.dayKey(Date.now()), /^\d{4}-\d{2}-\d{2}$/);
 });
 
+// ---------- onboarding: the sample signature playing back ----------
+
+test('playback: strokes appear in order at the speed they were drawn, with a pause between, and end whole', () => {
+  const a = stroke('ink', line(0, 0, 100, 0, 10), 10); // 100 ms
+  const b = stroke('ink', line(0, 20, 100, 20, 10), 10); // 100 ms
+  assert.equal(S.playLength([a, b], 50), 250);
+  assert.deepEqual(S.strokesAt([a, b], -1, 50), []);
+  assert.equal(S.strokesAt([a, b], 0, 50)[0].pts.length, 1, 'the first point at once');
+  assert.equal(S.strokesAt([a, b], 45, 50)[0].pts.length, 5);
+  assert.equal(S.strokesAt([a, b], 120, 50).length, 1, 'between strokes: only the first');
+  assert.equal(S.strokesAt([a, b], 160, 50)[1].pts.length, 2);
+  assert.deepEqual(S.strokesAt([a, b], 250, 50), [a, b]);
+  assert.deepEqual(S.strokesAt([a, b], 9999, 50), [a, b]);
+  // Always growing, never shrinking.
+  let last = 0;
+  for (let t = 0; t <= 260; t += 5) {
+    const n = S.strokesAt([a, b], t, 50).reduce((k, s) => k + s.pts.length, 0);
+    assert.ok(n >= last);
+    last = n;
+  }
+});
+
+test('fitting into a box: centred, inside the margin, line weight scaled; a shared frame keeps a growing signature still', () => {
+  const st = [stroke('ballpoint', line(100, 100, 500, 140, 20))];
+  const f = S.fitInto(st, 200, 100, 10);
+  const b = S.strokesBounds(f);
+  // Within a point: the thinnest line the engine draws does not shrink with the scale.
+  assert.ok(b.x >= 9 && b.x + b.width <= 191 && b.y >= 9 && b.y + b.height <= 91, JSON.stringify(b));
+  close(b.x + b.width / 2, 100, 0.5);
+  assert.ok(f[0].k < 1);
+  const whole = S.strokesBounds(st);
+  const half = [{ ...st[0], pts: st[0].pts.slice(0, 5) }];
+  const g1 = S.fitInto(half, 200, 100, 10, whole);
+  const g2 = S.fitInto(st, 200, 100, 10, whole);
+  assert.deepEqual(g1[0].pts[0], g2[0].pts[0], 'the start does not move as the rest is drawn');
+  assert.deepEqual(S.fitInto([], 10, 10), []);
+});
+
+test('sample signature: real ink strokes on its 232-point pad, timed like a hand, about two seconds to play', () => {
+  const sig = SM.SAMPLE_SIGNATURE;
+  assert.ok(sig.length >= 3 && sig.every((s) => s.pen === 'ink' && s.pts.length > 0));
+  const b = S.strokesBounds(sig);
+  assert.ok(b.x > 0 && b.x + b.width < SM.SAMPLE_PAD.width && b.y > 0 && b.y + b.height < SM.SAMPLE_PAD.height);
+  // It sits on its line: the line runs through the ink's lower half.
+  assert.ok(b.y + b.height > SM.SAMPLE_PAD.baseline && b.y < SM.SAMPLE_PAD.baseline);
+  for (const s of sig) for (let i = 1; i < s.pts.length; i++) assert.ok(s.pts[i][2] >= s.pts[i - 1][2]);
+  const ms = S.playLength(sig);
+  assert.ok(ms > 1200 && ms < 3000, `${ms} ms`);
+  // Ink varies with the timing: not one even width.
+  const r = S.layout(sig[0]).r;
+  assert.ok(Math.max(...r) / Math.min(...r) > 1.4);
+});
+
+// ---------- ratings ----------
+
+test('rating asks: the once-per-launch cap, never while a document is open, each once, and only when StoreKit can', () => {
+  const ok = { docOpen: false, askedThisLaunch: false, triggerUsed: false, storeCanAsk: true };
+  assert.equal(U.shouldAsk(ok), true);
+  assert.equal(U.shouldAsk({ ...ok, docOpen: true }), false);
+  assert.equal(U.shouldAsk({ ...ok, askedThisLaunch: true }), false);
+  assert.equal(U.shouldAsk({ ...ok, triggerUsed: true }), false);
+  assert.equal(U.shouldAsk({ ...ok, storeCanAsk: false }), false);
+});
+
+test('rating asks: after a trial starts on the onboarding paywall; Claim after the X; the later day; not on the install day', () => {
+  assert.equal(U.purchaseReview({ onboarding: true, isPro: true, inTrial: true }), 'trialStarted');
+  assert.equal(U.purchaseReview({ onboarding: true, isPro: true, inTrial: false }), null, 'yearly or lifetime: no ask');
+  assert.equal(U.purchaseReview({ onboarding: false, isPro: true, inTrial: true }), null, 'not from the in-app paywall');
+  assert.equal(U.purchaseReview({ onboarding: true, isPro: false, inTrial: true }), null);
+  assert.equal(U.afterOnboardingPaywall(false), 'claim');
+  assert.equal(U.afterOnboardingPaywall(true), 'app');
+  assert.equal(U.launchReview(null, '2026-11-03'), 'record');
+  assert.equal(U.launchReview('2026-11-03', '2026-11-03'), null);
+  assert.equal(U.launchReview('2026-11-03', '2026-11-04'), 'laterDay');
+});
+
+test('rating asks: wired where they belong (trial start in the paywall, Claim in the app, first export, first signed document share)', () => {
+  const pay = readFileSync(`${ROOT}src/screens/Paywall.tsx`, 'utf8');
+  assert.match(pay, /purchaseReview\(\{ onboarding, isPro: true, inTrial: await inFreeTrial\(\) \}\)/);
+  const app = readFileSync(`${ROOT}App.tsx`, 'utf8');
+  assert.match(app, /afterOnboardingPaywall\(pro\) === 'claim'/);
+  assert.match(app, /label="Claim"[\s\S]{0,120}maybeRequestReview\('claimFree'\)/);
+  assert.match(app, /maybeRequestReviewOnLaunch\(\)/);
+  assert.match(readFileSync(`${ROOT}src/screens/Export.tsx`, 'utf8'), /maybeRequestReview\('firstExport'\)/);
+  assert.match(readFileSync(`${ROOT}src/screens/Sign.tsx`, 'utf8'), /maybeRequestReview\('firstDocShare'\)/);
+  const rev = readFileSync(`${ROOT}src/reviews.ts`, 'utf8');
+  assert.match(rev, /shouldAsk\(\{ docOpen: docOpen\(\), askedThisLaunch: false, triggerUsed: used, storeCanAsk \}\)/);
+  assert.match(rev, /launchState !== 'idle' \|\| docOpen\(\)/, 'one per launch, never during a document');
+});
+
 // ---------- config and copy ----------
 
 test('app.json: identity, placeholders, document types for Open in, add-only Photos, push entitlement plugin last', () => {
@@ -562,11 +653,13 @@ test('copy: no em dashes, banned words or brand names in the app, the website or
     // In code, only what people read: string literals and JSX text (not names like Welcome.tsx).
     if (/\.(ts|tsx)$/.test(f)) s = (s.match(/'[^'\n]*'|"[^"\n]*"|`[^`]*`|>[^<>{}]+</g) ?? []).filter((t) => !/^'\.\.?\//.test(t) && !/^'(react|expo|@)/.test(t)).join('\n');
     assert.ok(!s.includes('—'), `em dash in ${f}`);
-    for (const w of [/\bunlock/i, /\bpremium\b/i, /\bseamless/i, /\beffortless/i, /\bwelcome\b/i, /\blet's\b/i, /professional-grade/i, /docusign/i, /\badobe\b(?!\.pdf)/i, /acrobat/i]) {
+    for (const w of [/\bunlock/i, /\bpremium\b/i, /\bseamless/i, /\beffortless/i, /\belevate/i, /\bpowerful\b/i, /in seconds/i, /\bwelcome\b/i, /\blet's\b/i, /professional-grade/i, /docusign/i, /\badobe\b(?!\.pdf)/i, /acrobat/i]) {
       const hit = s.replace(/com\.adobe\.pdf/g, '').match(w);
       assert.equal(hit, null, `${w} in ${f}`);
     }
   }
+  // No personal email in the app or on the website: the support page is the way in.
+  for (const f of [...walk(`${ROOT}src`, ['.ts', '.tsx']), `${ROOT}App.tsx`, ...walk(`${ROOT}docs`, ['.html'])]) assert.ok(!/@gmail\.com|mailto:/i.test(readFileSync(f, 'utf8')), `email in ${f}`);
   // User-facing strings in screens: no exclamation marks inside quotes.
   for (const f of walk(`${ROOT}src/screens`, ['.tsx'])) {
     const strings = readFileSync(f, 'utf8').match(/'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|>[^<>{}\n]+</g) ?? [];

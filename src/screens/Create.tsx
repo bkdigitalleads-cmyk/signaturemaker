@@ -3,9 +3,9 @@ import { Alert, Modal, ScrollView, StyleSheet, Text, useWindowDimensions, View }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, radius, space, type, Theme } from '../theme';
 import { useApp } from '../state';
-import { canUseFont, canUsePen } from '../gates';
+import { canUseFont, canUsePen, FREE_PENS } from '../gates';
 import { SCRIPT_FONTS, fontById, initialsOf } from '../fonts';
-import { Art, inkHex, INKS, InkId, Signature } from '../library';
+import { Art, inkHex, INKS, InkId, setDefault, Signature } from '../library';
 import { fitStrokes, hasInk, scaleStrokes, Stroke } from '../stroke';
 import { saveInitials, saveNewSignature } from '../signatures';
 import Pad from '../ui/Pad';
@@ -25,12 +25,17 @@ export default function Create({
   onSaved,
   onClose,
   startTyped = false,
+  onboarding = false,
+  onSkip,
 }: {
   /** Make the initials of this saved signature instead of a new signature. */
   initialsFor?: Signature;
   onSaved: (sig: Signature) => void;
   onClose?: () => void;
   startTyped?: boolean;
+  /** The onboarding step: only the free pens and fonts, Continue saves it as the default, and Skip goes on. */
+  onboarding?: boolean;
+  onSkip?: () => void;
 }) {
   const theme = useTheme();
   const { width: winW, height: winH } = useWindowDimensions();
@@ -92,7 +97,10 @@ export default function Create({
         savedHaptic();
         onSaved(next.find((s) => s.id === initialsFor.id)!);
       } else {
-        const { list, sig } = await saveNewSignature(library, art, ink);
+        const saved = await saveNewSignature(library, art, ink);
+        // From onboarding it is the default, so the first document opens with it ready.
+        const list = onboarding ? setDefault(saved.list, saved.sig.id) : saved.list;
+        const sig = list.find((s) => s.id === saved.sig.id) ?? saved.sig;
         setLibrary(list);
         savedHaptic();
         setStrokes([]);
@@ -114,6 +122,7 @@ export default function Create({
       <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: onClose ? space.s : space.l }]} keyboardShouldPersistTaps="handled" scrollEnabled={mode === 'type'}>
         <View style={styles.head}>
           <Title theme={theme}>{title}</Title>
+          {onboarding ? <Text style={[type.body, { color: theme.inkSoft }]}>Sign once and it is saved for every document.</Text> : null}
           <View style={styles.modes}>
             <Pill theme={theme} label="Draw" on={mode === 'draw'} onPress={() => setMode('draw')} />
             <Pill theme={theme} label="Type instead" on={mode === 'type'} onPress={() => setMode('type')} />
@@ -142,14 +151,20 @@ export default function Create({
               onInk={(i) => (initials ? null : setPrefs({ ink: i }))}
               onSize={(s) => setPrefs({ size: s })}
               locked={(p) => !canUsePen(p, isPro)}
+              pens={onboarding && !isPro ? FREE_PENS : undefined}
             />
           </>
         ) : (
-          <TypePanel theme={theme} text={typed} onText={setTyped} fontId={prefs.fontId} onFont={chooseFont} ink={ink} onInk={(i) => (initials ? null : setPrefs({ ink: i }))} isPro={isPro} width={padW} initials={initials} />
+          <TypePanel theme={theme} text={typed} onText={setTyped} fontId={prefs.fontId} onFont={chooseFont} ink={ink} onInk={(i) => (initials ? null : setPrefs({ ink: i }))} isPro={isPro} width={padW} initials={initials} freeOnly={onboarding && !isPro} />
         )}
       </ScrollView>
       <View style={styles.footer}>
-        <InkButton theme={theme} label={initials ? 'Save initials' : 'Save signature'} onPress={save} disabled={!art} busy={saving} hint={art ? undefined : mode === 'draw' ? 'Draw on the pad first' : 'Type a name first'} />
+        <InkButton theme={theme} label={onboarding ? 'Continue' : initials ? 'Save initials' : 'Save signature'} onPress={save} disabled={!art} busy={saving} hint={art ? undefined : mode === 'draw' ? 'Draw on the pad first' : 'Type a name first'} />
+        {onboarding && onSkip ? (
+          <Tap onPress={onSkip} style={styles.skip} accessibilityRole="button" accessibilityLabel="Skip for now">
+            <Text style={[type.body, { color: theme.inkSoft }]}>Skip for now</Text>
+          </Tap>
+        ) : null}
       </View>
       <WidePad
         theme={theme}
@@ -181,6 +196,7 @@ function TypePanel({
   isPro,
   width,
   initials,
+  freeOnly = false,
 }: {
   theme: Theme;
   text: string;
@@ -192,6 +208,8 @@ function TypePanel({
   isPro: boolean;
   width: number;
   initials: boolean;
+  /** Onboarding: only the fonts that come free. */
+  freeOnly?: boolean;
 }) {
   const f = fontById(fontId);
   const shown = text.trim() || (initials ? 'BWK' : 'Your name');
@@ -222,7 +240,7 @@ function TypePanel({
       </View>
       )}
       <View style={[styles.fonts, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="radiogroup" accessibilityLabel="Font">
-        {SCRIPT_FONTS.map((font, i) => {
+        {SCRIPT_FONTS.filter((font) => !freeOnly || font.free).map((font, i) => {
           const on = font.id === fontId;
           const locked = !canUseFont(font.id, isPro);
           return (
@@ -331,6 +349,7 @@ const styles = StyleSheet.create({
   tools: { flexDirection: 'row', alignItems: 'center', marginTop: -space.s },
   wideBtn: { flexDirection: 'row', alignItems: 'center', gap: space.xs, minHeight: 44, paddingHorizontal: space.s },
   footer: { paddingHorizontal: space.l, paddingBottom: space.m, paddingTop: space.s },
+  skip: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: space.xs },
   preview: { height: 132, borderRadius: radius.large, borderWidth: 1, justifyContent: 'center', paddingHorizontal: space.xl },
   previewLine: { position: 'absolute', left: space.xl, right: space.xl, bottom: 34, height: 1 },
   inkRow: { flexDirection: 'row', gap: space.xs },

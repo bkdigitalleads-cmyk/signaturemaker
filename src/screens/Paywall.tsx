@@ -6,7 +6,11 @@ import { useTheme, radius, space, tabular, type, Theme } from '../theme';
 import { useApp } from '../state';
 import type { PaywallReason } from '../gates';
 import { getOffering, purchasePackage, restorePurchases, isBillingAvailable } from '../purchases';
-import { getTrialEligibleIds, trialLabel } from '../trial';
+import { getTrialEligibleIds, inFreeTrial, trialLabel } from '../trial';
+import { purchaseReview } from '../rules';
+import { maybeRequestReview } from '../reviews';
+import { defaultSignature } from '../library';
+import MarkView from '../ui/MarkView';
 import { cancelTrialReminder, scheduleTrialReminderIfTrial } from '../reminder';
 import { disclosureText, planOrder, planTitle, planTypeOf, preselect, PlanType } from '../offer';
 import { TERMS_URL } from '../links';
@@ -19,13 +23,13 @@ const ONBOARDING_CLOSE_DELAY_MS = 3000;
 
 /** The headline and one line, by why the paywall opened. */
 const REASON: Record<PaywallReason, { title: string; line: string }> = {
-  export: { title: 'Clean exports, every time.', line: 'Every format and size with no corner mark, plus every pen and font.' },
-  document: { title: 'Sign every document.', line: 'Unlimited signed PDFs with no corner mark, plus initials, the date and text.' },
-  pen: { title: 'All four pens.', line: 'Marker and Fountain join Ink and Ballpoint, with all twelve script fonts.' },
-  font: { title: 'All twelve script fonts.', line: 'Find the one that looks like your hand, with every pen too.' },
-  initials: { title: 'Initials beside your signature.', line: 'Draw or type them once, and they are ready on every document.' },
-  stamp: { title: 'Initials, the date and text.', line: 'Fill in the rest of the form on the same page, then send it back.' },
-  pro: { title: 'Signature Maker Pro.', line: 'Unlimited clean exports and signed documents, every pen and font, initials, the date and text.' },
+  export: { title: 'Export without the mark.', line: 'Every format and size, with no corner mark, plus every pen and font.' },
+  document: { title: 'Sign every document.', line: 'As many signed PDFs as you need, with no corner mark, plus initials, the date and text.' },
+  pen: { title: 'All four pens.', line: 'Marker and Fountain, and all twelve script fonts.' },
+  font: { title: 'All twelve script fonts.', line: 'Pick the one closest to your handwriting. All four pens come with it.' },
+  initials: { title: 'Initials beside your signature.', line: 'Make them once. They are ready on every document.' },
+  stamp: { title: 'Initials, the date and text.', line: 'Fill in the rest of the form on the same page.' },
+  pro: { title: 'Signature Maker Pro.', line: 'Exports and signed documents with no mark, every pen and font, initials, the date and text.' },
 };
 
 /**
@@ -46,7 +50,9 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const compact = height < 760;
-  const { paywall, hidePaywall, setIsPro, nestedPaywall } = useApp();
+  const { paywall, hidePaywall, setIsPro, nestedPaywall, library } = useApp();
+  // Onboarding: the signature they just made, small at the top.
+  const mine = onboarding ? defaultSignature(library) : null;
   // The nested copy shows while a full-screen modal is up; the root copy otherwise.
   const visible = paywall != null && nested === nestedPaywall;
   const reason: PaywallReason = onboarding ? 'pro' : paywall ?? 'pro';
@@ -92,7 +98,13 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
       setIsPro(true);
       hidePaywall();
       const reminded = await scheduleTrialReminderIfTrial();
-      Alert.alert('Pro is on', `Every pen and font, initials and stamps, and clean files.${reminded ? ' We will remind you the day before the trial ends.' : ''}`);
+      if (onboarding) {
+        // A trial that just started is a good moment to ask for a rating; the app opening with Pro on says the rest.
+        const ask = purchaseReview({ onboarding, isPro: true, inTrial: await inFreeTrial() });
+        if (ask) maybeRequestReview(ask);
+      } else {
+        Alert.alert('Pro is on', `Every pen and font, initials, stamps and clean files.${reminded ? ' You will get a reminder the day before the trial ends.' : ''}`);
+      }
     } else if (res.ok) {
       Alert.alert('Paid, but Pro is not showing', 'The App Store can lag a minute. Tap Restore purchases in a moment and it turns on.');
     } else if (!res.userCancelled && res.error) {
@@ -109,7 +121,7 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
     if (res.ok && res.isPro) {
       setIsPro(true);
       hidePaywall();
-      Alert.alert('Pro is back on', 'Everything is open again.');
+      Alert.alert('Pro is back on', 'Every pen and font, initials, stamps and clean files.');
     } else if (res.ok) {
       Alert.alert('Nothing to restore', 'This Apple ID has no Signature Maker Pro purchase.');
     } else {
@@ -145,18 +157,28 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
             <GlyphButton theme={theme} glyph="close" label={keepGoing ? 'Close and continue with the corner mark' : 'Close'} onPress={close} disabled={!canClose} color={theme.inkSoft} />
           </View>
 
-          <Text style={[type.title, styles.pad, compact ? { marginTop: space.s } : { marginTop: space.l }, { color: theme.ink }]} accessibilityRole="header">
+          {mine ? (
+            <View style={[styles.pad, styles.mine]}>
+              <View style={[styles.minePaper, { backgroundColor: theme.paper, borderColor: theme.edge }]}>
+                <MarkView mark={mine.main} height={40} maxWidth={150} label="Your signature" />
+              </View>
+              <Text style={[type.strong, { color: theme.ink, flex: 1 }]}>Your signature is saved.</Text>
+            </View>
+          ) : null}
+          <Text style={[type.title, styles.pad, compact || mine ? { marginTop: space.m } : { marginTop: space.l }, { color: theme.ink }]} accessibilityRole="header">
             {headline}
           </Text>
           <Text style={[type.body, styles.pad, styles.line, { color: theme.inkSoft }]}>{copy.line}</Text>
-          <Text style={[type.body, styles.pad, styles.line, { color: theme.inkSoft }]}>
-            {keepGoing ? 'Or close this to save it with a small corner mark. Making and saving signatures is always free.' : 'Making and saving signatures is always free.'}
-          </Text>
+          {mine ? null : (
+            <Text style={[type.body, styles.pad, styles.line, { color: theme.inkSoft }]}>
+              {keepGoing ? 'Or close this to save it with a small corner mark. Making and saving signatures is always free.' : 'Making and saving signatures is always free.'}
+            </Text>
+          )}
 
           {loading ? (
             <ActivityIndicator style={{ marginVertical: space.xl }} color={theme.inkSoft} />
           ) : packages.length === 0 || !isBillingAvailable() ? (
-            <Text style={[type.body, styles.unavailable, { color: theme.inkSoft }]}>The App Store is not answering right now. Try again in a bit.</Text>
+            <Text style={[type.body, styles.unavailable, { color: theme.inkSoft }]}>The App Store did not answer. Try again in a minute.</Text>
           ) : (
             <View style={[styles.plans, compact && { marginTop: space.l }, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="radiogroup">
               {packages.map((p, i) => {
@@ -238,6 +260,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingBottom: space.xl },
   closeRow: { alignItems: 'flex-end', paddingHorizontal: space.s, paddingTop: space.xs },
+  mine: { flexDirection: 'row', alignItems: 'center', gap: space.m },
+  minePaper: { width: 172, height: 60, borderRadius: radius.small, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   pad: { paddingHorizontal: space.xl },
   line: { marginTop: space.s },
   plans: { marginTop: space.xl, marginHorizontal: space.l, borderRadius: radius.large, borderWidth: 1, overflow: 'hidden' },

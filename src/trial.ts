@@ -4,7 +4,7 @@
  * The rules themselves are pure and unit-checked in offer.ts.
  */
 import Purchases, { INTRO_ELIGIBILITY_STATUS, PurchasesPackage } from 'react-native-purchases';
-import { isBillingAvailable } from './purchases';
+import { ENTITLEMENT_ID, isBillingAvailable } from './purchases';
 import { trialLabelFrom, trialLength } from './offer';
 
 /** Product ids among `pkgs` whose free trial this user can still get. Unknown counts as no. */
@@ -25,4 +25,15 @@ export async function getTrialEligibleIds(pkgs: PurchasesPackage[]): Promise<Set
 export function trialLabel(pkg: PurchasesPackage | undefined | null, eligible: Set<string>): string | null {
   if (!pkg) return null;
   return trialLabelFrom(pkg.product.introPrice, eligible.has(pkg.product.identifier));
+}
+
+/** True when the pro entitlement is in its free trial right now (just after the onboarding purchase). Unknown counts as no. */
+export async function inFreeTrial(): Promise<boolean> {
+  if (!isBillingAvailable()) return false;
+  try {
+    const info = await Purchases.getCustomerInfo();
+    return info.entitlements.active[ENTITLEMENT_ID]?.periodType === 'TRIAL';
+  } catch {
+    return false;
+  }
 }

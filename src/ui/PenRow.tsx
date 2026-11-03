@@ -28,6 +28,7 @@ export default function PenRow({
   onInk,
   onSize,
   locked,
+  pens,
 }: {
   theme: Theme;
   pen: PenId;
@@ -37,11 +38,13 @@ export default function PenRow({
   onInk: (i: InkId) => void;
   onSize: (s: SizeStep) => void;
   locked: (p: PenId) => boolean;
+  /** Only these pens (onboarding shows the free ones). */
+  pens?: PenId[];
 }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.pens} accessibilityRole="radiogroup" accessibilityLabel="Pen">
-        {PENS.map((p) => {
+        {PENS.filter((p) => !pens || pens.includes(p.id)).map((p) => {
           const on = p.id === pen;
           const lock = locked(p.id);
           return (

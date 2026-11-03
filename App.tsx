@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as Linking from 'expo-linking';
-import { useTheme, UI_FONT_FILES } from './src/theme';
+import { useTheme, UI_FONT_FILES, space, type } from './src/theme';
 import { SCRIPT_FONT_FILES } from './src/fontFiles';
 import { AppProvider, useApp, ONBOARDED_KEY } from './src/state';
 import type { Signature } from './src/library';
 import { OpenDoc, openIncoming } from './src/documents';
 import { kvGet, kvSet, sweepCache } from './src/store';
-import { firstTabFor } from './src/rules';
-import { maybeRequestReviewOnLaunch } from './src/reviews';
+import { afterOnboardingPaywall, firstTabFor } from './src/rules';
+import { maybeRequestReview, maybeRequestReviewOnLaunch } from './src/reviews';
 import { PRIVACY_URL } from './src/links';
 import Create from './src/screens/Create';
 import Library from './src/screens/Library';
@@ -22,7 +22,7 @@ import Settings from './src/screens/Settings';
 import PaywallModal from './src/screens/Paywall';
 import Welcome, { NeedStep, TrialSteps } from './src/screens/Welcome';
 import TabBar, { Tab } from './src/ui/TabBar';
-import { Toast } from './src/ui/Kit';
+import { Drawer, InkButton, Toast } from './src/ui/Kit';
 
 /** A screen over the tabs. */
 type Over = { name: 'initials'; sig: Signature } | { name: 'export'; sig: Signature } | { name: 'sign'; doc: OpenDoc } | null;
@@ -37,7 +37,9 @@ function Shell() {
   overRef.current = over;
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
   // New installs: three value screens, what you need today, the trial and reminder screens, then the paywall.
-  const [step, setStep] = useState<'intro' | 'need' | 'trial' | 'paywall'>('intro');
+  const [step, setStep] = useState<'intro' | 'need' | 'sign' | 'trial' | 'paywall'>('intro');
+  // After the onboarding paywall is closed with the X: the small "first export and first document are free" sheet.
+  const [claim, setClaim] = useState(false);
   const paywallOpened = useRef(false);
   const launchAsked = useRef(false);
 
@@ -71,7 +73,9 @@ function Shell() {
     paywallOpened.current = true;
     setStep('paywall');
     // When the onboarding paywall closes (purchase or the close button), onboarding is done.
-    askPro('pro').then(() => {
+    askPro('pro').then((pro) => {
+      // After the paywall's fade, so iOS is not asked to present one sheet while another is leaving.
+      if (afterOnboardingPaywall(pro) === 'claim') setTimeout(() => setClaim(true), 450);
       kvSet(ONBOARDED_KEY, '1').catch(() => {});
       setTab(firstTabFor(prefs.need));
       setOnboarded(true);
@@ -112,7 +116,8 @@ function Shell() {
       <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: insets.top }}>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
         {step === 'intro' && <Welcome onDone={() => setStep('need')} />}
-        {step === 'need' && <NeedStep onDone={() => setStep('trial')} />}
+        {step === 'need' && <NeedStep onDone={() => setStep('sign')} />}
+        {step === 'sign' && <Create onboarding onSaved={() => setStep('trial')} onSkip={() => setStep('trial')} />}
         {(step === 'trial' || step === 'paywall') && <TrialSteps onDone={openOnboardingPaywall} />}
         <PaywallModal privacyUrl={PRIVACY_URL} onboarding />
       </View>
@@ -163,6 +168,20 @@ function Shell() {
       {over == null ? <TabBar theme={theme} tab={tab} onTab={setTab} /> : null}
       <Toast theme={theme} text={notice} top={insets.top} />
       <PaywallModal privacyUrl={PRIVACY_URL} />
+      <Drawer theme={theme} visible={claim} onClose={() => setClaim(false)}>
+        <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header">
+          Your first export and first signed document are free.
+        </Text>
+        <Text style={[type.body, { color: theme.inkSoft, marginTop: space.s, marginBottom: space.xl }]}>Neither carries a mark. Making and saving signatures stays free.</Text>
+        <InkButton
+          theme={theme}
+          label="Claim"
+          onPress={() => {
+            setClaim(false);
+            maybeRequestReview('claimFree');
+          }}
+        />
+      </Drawer>
     </View>
   );
 }

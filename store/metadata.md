@@ -21,34 +21,36 @@ Rule: no word from the name or subtitle (electronic, signature, creator, sign, d
 
 Research behind them (Nov 2, ASOMobile Apple search popularity, iTunes top 10, AppMagic revenue): "signature maker" 40, "sign documents" 38, "electronic signature" 34, "signature creator" 32, "sign pdf" 27. Eight of the top ten on "signature maker" have under 100 ratings; a 90-day-old app with 0 ratings is first on "electronic signature" and "signature creator"; apps under 5,000 downloads show $5K to $10K revenue bands.
 
-## Promotional text (154/170)
-Draw or type a signature that looks like yours, save it as a transparent PNG, and sign a PDF from Mail in under a minute. No account. Nothing is uploaded.
+## Promotional text (148/170)
+Sign the PDF in your inbox from your iPhone. Draw or type your signature once, save it as a transparent PNG, and use it on any document. No account.
 
 ## Description
-Make a signature that looks like yours in under a minute, save it as a clean transparent PNG, and sign the PDF in your inbox without leaving your phone. Signature Maker works offline, needs no account, and nothing leaves your iPhone.
+Sign a PDF on your iPhone in under a minute.
 
-DRAW OR TYPE A SIGNATURE THAT LOOKS LIKE YOURS
-• Smooth ink with a finger or Apple Pencil, on a wide sheet of paper with a signing line
-• Four pens: Ink thickens and thins with your speed or pressure, Ballpoint is even and thin, Marker is bold, Fountain is thick on the way down and thin on the way up
+Draw your signature with a finger or Apple Pencil, or type it in a script font. Put it on a lease, an offer letter or a form from Mail or Files, and send the signed copy back. Save it as a transparent PNG for an email footer, Word or Canva. Everything stays on your phone.
+
+DRAW OR TYPE YOUR SIGNATURE
+• Draw on a sheet of paper with a signing line, with a finger or Apple Pencil
+• Four pens: Ink gets thicker when you slow down or press harder, Ballpoint is even and thin, Marker is bold, Fountain is thick on the way down and thin on the way up
 • Black, navy, blue or red ink, three thicknesses, undo, redo and clear
-• Wide mode turns the paper sideways so a long name fits
-• Or type your name and pick from twelve script fonts, shown as live previews of your name
-• Initials too, drawn or typed, kept with the signature
+• Wide mode turns the paper sideways for a long name
+• Or type your name and pick one of twelve script fonts, each shown with your name
+• Initials, drawn or typed, kept with the signature
 
 EXPORT A TRANSPARENT PNG
-• Cropped to your ink with a small margin, at 2x or 3x
-• Shown on a checkerboard so you can see it really is transparent, and at the foot of a letter so you see it in context
-• Ready for an email footer, Word, Pages, Canva or a form
-• PNG or JPG on white, Save to Photos, Copy, or the share sheet
+• Cropped to the ink with a small margin, at 2x or 3x
+• Shown on a checkerboard, so you can see the background is clear, and at the foot of a letter
+• For an email footer, Word, Pages, Canva or a form
+• Also PNG or JPG on white, Save to Photos, Copy, or the share sheet
 
-SIGN ANY PDF AND SEND IT BACK
-• In Mail or Files, tap Share and choose Signature Maker, or open a PDF or a photo of a form inside the app
+SIGN A PDF AND SEND IT BACK
+• In Mail or Files, tap Share and choose Signature Maker, or open a PDF or a photo of a form in the app
 • Your default signature goes on the page; drag it onto the line and pinch to size it
-• Add initials, today's date and a line of text, on any page
-• Done signing saves a new copy named after the original with "signed" added; the original is never changed
+• Add initials, today's date and a line of text on any page
+• Done signing saves a new copy named after the original with "signed" added; the original stays as it was
 • Send it back with Mail or the share sheet; the last 20 signed files stay in Documents
 
-PRIVATE BY DESIGN
+PRIVATE
 • Your signatures and documents stay on your iPhone
 • No account, no sign-in, no cloud, no ads, no tracking
 • Works in airplane mode
@@ -57,13 +59,13 @@ WHAT IT IS
 Signature Maker creates a signature image and places it on your document. It does not verify identity or certify signatures, and it is not an identity-verified electronic signature service.
 
 SIGNATURE MAKER PRO
-Free, always: drawing, typing and saving any number of signatures, your library, and the export preview. Your first export and your first signed document are free too. Pro adds unlimited exports and signed documents with no corner mark, all four pens and all twelve fonts, initials, and the date and text stamps. Choose weekly (with a free trial for new subscribers), yearly, or lifetime with one payment.
+Free: drawing, typing and saving as many signatures as you like, your library, and the export preview. Your first export and your first signed document are free too. Pro adds exports and signed documents with no corner mark, all four pens and all twelve fonts, initials, and the date and text stamps. Weekly (with a free trial for new subscribers), yearly, or lifetime with one payment.
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://bkdigitalleads-cmyk.github.io/signaturemaker/privacy.html
 
 ## What's New (1.0.0)
-First version. Draw or type your signature, save it as a transparent PNG, and sign PDFs from Mail or Files, all on your iPhone.
+First version. Draw or type your signature, save it as a transparent PNG, and sign PDFs from Mail or Files on your iPhone.
 
 ## Category
 Primary: Productivity. Secondary: Business.
@@ -89,18 +91,19 @@ Signature Maker makes signature images and places them on documents the user alr
 
 Free: drawing, typing and saving any number of signatures, the library, and the export preview. The first signature export (any format) and the first signed document are free and unmarked. After that, an export or a signed document opens the in-app paywall first; closing it still saves the file, with a small "Made with Signature Maker" mark in the corner, so the user is never stuck.
 
-Pro adds unlimited unmarked exports and signed documents, the Marker and Fountain pens, eight more script fonts, initials, and the date and text stamps. Products: weekly with a 3-day free trial, yearly, and a one-time lifetime purchase. Restore purchases is on both paywalls and in Settings.
+Pro adds exports and signed documents with no mark, the Marker and Fountain pens, eight more script fonts, initials, and the date and text stamps. Products: weekly with a 3-day free trial, yearly, and a one-time lifetime purchase. Restore purchases is on both paywalls and in Settings.
 
-On first launch: three short intro screens, a question about what the user needs today (it only picks the first tab), and, if the Apple ID can still get the free trial, two screens about the trial and its reminder (the reminder screen may ask for notification permission, used only for one local reminder the day before a trial ends). Then the paywall opens. The close button (X, top right) appears after 3 seconds; tap it to use the app for free.
+On first launch: three short screens that show the app (a signature being drawn, the same signature as a transparent image, and on a lease), a question about what the user needs today (it only picks the first tab), then "Sign here" with the drawing pad, where the user can draw or type a signature or tap "Skip for now". If the Apple ID can still get the free trial, two screens explain the trial and its reminder (the reminder screen may ask for notification permission, used only for one local reminder the day before a trial ends). Then the paywall opens. The close button (X, top right) appears after 3 seconds; tapping it shows a small sheet saying the first export and the first signed document are free, with a Claim button that closes it. The app then opens. The native rating prompt (StoreKit) may appear after Claim or after a trial starts; it is never shown more than once per launch.
 
-To test signing with any PDF: open the Files app (or Mail) on the test device, tap any PDF, tap Share and choose Signature Maker; or in the app, open Documents and tap Open a PDF. Tap Signature (if no signature is saved yet the app asks you to draw one first), drag it onto the page, pinch or pull its corner to resize, then tap Done signing. The signed copy appears in Documents with Open and Share. To test a signature image: on Create, draw with a finger, tap Save signature, and on the export screen tap Share Transparent PNG.
+To test signing with any PDF: open the Files app (or Mail) on the test device, tap any PDF, tap Share and choose Signature Maker; or in the app, open Documents and tap Open a PDF. Tap Signature (the signature from onboarding is already there; if it was skipped, the app asks you to draw one first), drag it onto the page, pinch or pull its corner to resize, then tap Done signing. The signed copy appears in Documents with Open and Share. To test a signature image: on Create, draw with a finger, tap Save signature, and on the export screen tap Share Transparent PNG.
 
-## Screenshot plan (iPhone 6.9" and 6.5", 6 shots; Brian captures from a TestFlight build)
-1. Draw a signature on the canvas: Create with a signature in blue ink on the paper, the pen row visible: "Draw a signature that looks like yours"
-2. Transparent PNG on a checkerboard: the export screen with Transparent PNG chosen: "A transparent PNG, ready for email, Word and Canva"
-3. 12 script fonts: Type instead with a name and the font rows: "Or type it in 12 script fonts"
-4. Place a signature on a PDF: a lease page with the signature on the tenant line and its corner handle: "Sign any PDF on your phone"
-5. The signed PDF ready to send: "Signed." with the page and Send it back: "Signed and ready to send back"
-6. Private and offline: the Library or Documents with airplane mode in the status bar: "No account. Nothing leaves your phone"
+## Screenshots (store/screenshots/, made by store/screenshots.js from the renders)
+6.9 inch at 1320x2868 and 6.5 inch at 1242x2688, six each, in this order. The caption at the top of each carries the search terms in order of importance, in Newsreader on the warm paper background, with the screen under it; no device frames, no gradients, no emoji.
+1. "Signature Maker": a drawn signature on the canvas
+2. "Sign Documents & PDFs": the signature placed on a lease
+3. "Transparent PNG Signature": the export on the checkerboard
+4. "Type It in 12 Script Styles": the font list
+5. "Initials, Date and Text": the stamps on a page
+6. "Private. Works Offline.": the About line in Settings
 
-Renders of every screen are in docs/design/after for reference; the store shots come from a real device.
+docs/design/after has every screen for reference.

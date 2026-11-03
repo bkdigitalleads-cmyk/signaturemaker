@@ -45,7 +45,7 @@ export default function Library({ onCreate, onExport, onInitials }: { onCreate: 
         <Title theme={theme}>Library</Title>
         {library.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={[type.body, { color: theme.inkSoft }]}>Saved signatures and initials live here, on this iPhone. The default one is ready when you sign a document.</Text>
+            <Text style={[type.body, { color: theme.inkSoft }]}>Your saved signatures and initials. The default one goes on the next document you sign.</Text>
             <QuietButton theme={theme} glyph="create" label="Make a signature" onPress={onCreate} />
           </View>
         ) : (

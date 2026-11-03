@@ -6,7 +6,7 @@ import { useApp } from '../state';
 import { restorePurchases } from '../purchases';
 import { cancelTrialReminder } from '../reminder';
 import { kvSet } from '../store';
-import { PRIVACY_URL, SUPPORT_EMAIL, SUPPORT_URL, TERMS_URL } from '../links';
+import { PRIVACY_URL, SUPPORT_URL, TERMS_URL } from '../links';
 import { Caption, Label, Panel, Row, Title } from '../ui/Kit';
 
 /** Pro, restore, help and the one-line About. Test tools behind seven taps on the version, in test builds only. */
@@ -26,7 +26,7 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
     if (res.ok) cancelTrialReminder();
     if (res.ok && res.isPro) {
       setIsPro(true);
-      Alert.alert('Pro is back on', 'Everything is open again.');
+      Alert.alert('Pro is back on', 'Every pen and font, initials, stamps and clean files.');
     } else if (res.ok) Alert.alert('Nothing to restore', 'This Apple ID has no Signature Maker Pro purchase.');
     else Alert.alert('Restore did not work', res.error ?? 'Try once more.');
   };
@@ -71,8 +71,7 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
       <View>
         <Label theme={theme}>Help</Label>
         <Panel theme={theme}>
-          <Row theme={theme} first label="Support and questions" onPress={() => Linking.openURL(SUPPORT_URL)} />
-          <Row theme={theme} label="Email support" sub={SUPPORT_EMAIL} onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Signature%20Maker`)} />
+          <Row theme={theme} first label="Support" sub="How-tos and how to reach us" onPress={() => Linking.openURL(SUPPORT_URL)} />
           <Row theme={theme} label="Privacy Policy" onPress={() => Linking.openURL(PRIVACY_URL)} />
           <Row theme={theme} label="Terms of Use (EULA)" onPress={() => Linking.openURL(TERMS_URL)} />
         </Panel>
@@ -82,7 +81,7 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
         <Label theme={theme}>About</Label>
         <Panel theme={theme} style={styles.about}>
           <Text style={[type.body, { color: theme.ink }]}>Signature Maker creates a signature image and places it on your document. It does not verify identity or certify signatures.</Text>
-          <Text style={[type.small, { color: theme.inkSoft }]}>No account. Everything stays on this iPhone, and nothing is uploaded.</Text>
+          <Text style={[type.small, { color: theme.inkSoft }]}>No account. Your signatures and documents stay on this iPhone.</Text>
           <Text style={[type.small, { color: theme.inkFaint }]} onPress={versionTap} accessibilityRole="text">
             Version {version}
           </Text>

@@ -388,3 +388,55 @@ export function sampleStroke(pen: PenId, size: SizeStep = 1, w = 44, h = 22): St
   }
   return { pen, size, pts };
 }
+
+/** A pause between strokes when a signature plays back, in ms (a hand lifting and moving). */
+export const PLAY_PAUSE = 140;
+
+/** How long a signature takes to play back: each stroke's own time, with a pause between. */
+export function playLength(strokes: Stroke[], pause = PLAY_PAUSE): number {
+  let t = 0;
+  strokes.forEach((s, i) => {
+    t += s.pts.length ? s.pts[s.pts.length - 1][2] - s.pts[0][2] : 0;
+    if (i < strokes.length - 1) t += pause;
+  });
+  return t;
+}
+
+/**
+ * What has been drawn `t` ms into playing a signature back: the strokes
+ * already finished, plus the start of the one under the pen. At or past
+ * playLength it is the whole signature.
+ */
+export function strokesAt(strokes: Stroke[], t: number, pause = PLAY_PAUSE): Stroke[] {
+  const out: Stroke[] = [];
+  let start = 0;
+  for (const s of strokes) {
+    if (s.pts.length === 0) continue;
+    const t0 = s.pts[0][2];
+    const dur = s.pts[s.pts.length - 1][2] - t0;
+    if (t < start) break;
+    if (t >= start + dur) out.push(s);
+    else {
+      const pts = s.pts.filter((p) => p[2] - t0 <= t - start);
+      if (pts.length > 0) out.push({ ...s, pts });
+      break;
+    }
+    start += dur + pause;
+  }
+  return out;
+}
+
+/**
+ * Strokes scaled and centred to fill a box with a margin, line weight
+ * scaled with them (for showing a signature small: onboarding, previews).
+ * `bounds` lets several views share one framing (for playback, pass the
+ * whole signature's bounds so it does not jump as it grows).
+ */
+export function fitInto(strokes: Stroke[], width: number, height: number, margin = 8, bounds?: Rect | null): Stroke[] {
+  const b = bounds ?? strokesBounds(strokes);
+  if (!b || strokes.length === 0) return strokes;
+  const k = Math.min((width - margin * 2) / Math.max(1, b.width), (height - margin * 2) / Math.max(1, b.height));
+  const cx = b.x + b.width / 2;
+  const cy = b.y + b.height / 2;
+  return transformStrokes(strokes, -cx, -cy, k).map((s) => ({ ...s, pts: s.pts.map((p) => [p[0] + width / 2, p[1] + height / 2, p[2], p[3]] as RawPoint) }));
+}
