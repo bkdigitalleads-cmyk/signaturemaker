@@ -1,0 +1,27 @@
+:root { --desk:#EFEBE3; --paper:#FBF9F4; --ink:#1A1A1E; --sub:#57554F; --faint:#8C877E; --rule:#DDD7CC; --blue:#1D3A8A; --onblue:#FBF9F4; }
+@media (prefers-color-scheme: dark) {
+  :root { --desk:#1B1A18; --paper:#24231F; --ink:#ECE8E0; --sub:#ABA69C; --faint:#7F7A71; --rule:#35332E; --blue:#7393E6; --onblue:#10162A; }
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--desk); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; line-height:1.6; font-size:17px; }
+.wrap { max-width:720px; margin:0 auto; padding:40px 22px 64px; }
+h1, h2, .brand { font-family:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif; font-weight:500; }
+h1 { font-size:36px; line-height:1.18; margin:18px 0 10px; }
+h2 { font-size:26px; margin:40px 0 8px; }
+h3 { font-size:18px; margin:24px 0 4px; }
+p { margin:8px 0; }
+a { color:var(--ink); text-decoration-thickness:1.5px; text-underline-offset:3px; }
+.brand { display:flex; align-items:center; gap:10px; font-size:22px; color:var(--ink); text-decoration:none; }
+.brand img { border-radius:8px; }
+.tag { color:var(--sub); font-size:19px; }
+.cta { display:inline-block; background:var(--blue); color:var(--onblue); font-weight:600; padding:15px 28px; border-radius:18px; text-decoration:none; margin:14px 0 4px; }
+.small { color:var(--faint); font-size:14px; }
+.rows { margin-top:22px; border-top:1px solid var(--rule); }
+.rows div { padding:14px 0; border-bottom:1px solid var(--rule); }
+.rows b { display:block; font-family:"Newsreader","Iowan Old Style",Georgia,serif; font-weight:500; font-size:20px; }
+.shots { display:flex; gap:12px; overflow-x:auto; margin:26px 0 6px; padding-bottom:8px; }
+.shots img { width:200px; height:auto; border-radius:22px; border:1px solid var(--rule); flex:none; }
+.note { background:var(--paper); border:1px solid var(--rule); border-radius:16px; padding:14px 18px; color:var(--sub); margin-top:26px; }
+.faq h3 { margin:22px 0 4px; }
+footer { margin-top:56px; padding-top:18px; border-top:1px solid var(--rule); color:var(--faint); font-size:14px; }
+footer a { margin-right:14px; color:var(--sub); }
