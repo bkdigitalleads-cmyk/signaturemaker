@@ -36,7 +36,7 @@
     "android": {
       "package": "com.bwk.signaturemaker",
       "adaptiveIcon": {
-        "backgroundColor": "#F4F1EA",
+        "backgroundColor": "#1D3A8A",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
@@ -50,7 +50,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 140,
+          "imageWidth": 120,
           "resizeMode": "contain",
           "backgroundColor": "#F4F1EA",
           "dark": {
@@ -78,9 +78,9 @@
       "./plugins/withoutPushEntitlement"
     ],
     "extra": {
-      "revenueCatApiKeyIos": "TODO_COWORK_REVENUECAT_PUBLIC_IOS_KEY",
+      "revenueCatApiKeyIos": "appl_dJcQGtBZpMtitrAyiRBKfPQiKKS",
       "eas": {
-        "projectId": "TODO_COWORK_EXPO_PROJECT_ID"
+        "projectId": "588561f4-8e20-4bdd-9dfc-742100ee3ce7"
       }
     },
     "owner": "bkdeveloper123"

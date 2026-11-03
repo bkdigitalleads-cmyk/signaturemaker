@@ -2,6 +2,11 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-03: 1.0.0 build 1, the last setup values (same branch, PR #1, not merged, no build).
+  - app.json `extra.eas.projectId` 588561f4-8e20-4bdd-9dfc-742100ee3ce7 (bkdeveloper123/signaturemaker) and `extra.revenueCatApiKeyIos` (the public `appl_` SDK key, so purchases are on in builds). eas.json `ascAppId` 6830028405 was already in. No TODO_COWORK placeholders are left.
+  - CLAUDE.md and store/metadata.md say they are set; the app.json check in tests/logic.test.mjs now expects the real project id and an `appl_` key.
+  - Checked: npx tsc --noEmit clean; npm test 29 pass.
+
 - 2026-11-03: 1.0.0 build 1, the store name from App Store Connect (same branch, no build). Brian: "Electronic Signature Maker" was taken, so the app record was created as "Electronic Signature Creator" (ASC app id 6830028405).
   - Store name "Electronic Signature Creator" (28) and subtitle "Sign Documents & PDF Maker" (26), so "signature maker" still indexes across the name and subtitle, and "sign documents" and "sign pdf" stay exact. Keywords unchanged (100; still no word from the new name or subtitle). Home screen and in-app name stay "Signature Maker".
   - Updated: store/metadata.md (name, subtitle, the app record line, the keyword rule), docs/index.html (title, Open Graph and Twitter titles, meta description, JSON-LD name and alternateName, downloadUrl), docs/privacy.html and docs/support.html ("on the App Store as"), README.md, CLAUDE.md.

@@ -541,7 +541,9 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.ok(!JSON.stringify(app.ios.infoPlist).match(/Camera|Microphone|Location/));
   const eas = JSON.parse(readFileSync(`${ROOT}eas.json`, 'utf8'));
   assert.equal(eas.cli.appVersionSource, 'local');
-  for (const v of [app.extra.eas.projectId, app.extra.revenueCatApiKeyIos]) assert.match(v, /^TODO_COWORK_/);
+  assert.equal(app.extra.eas.projectId, '588561f4-8e20-4bdd-9dfc-742100ee3ce7');
+  // The public RevenueCat SDK key (purchases run only when it starts with appl_).
+  assert.match(app.extra.revenueCatApiKeyIos, /^appl_/);
   assert.equal(eas.submit.production.ios.ascAppId, '6830028405');
 });
 

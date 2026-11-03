@@ -2,7 +2,7 @@
 
 Everything here is pasted into App Store Connect by Brian and Cowork. No em dashes anywhere, no brand words (no other signing products or PDF software), no "Unlock", "Premium", "Seamless", "Effortless", "Welcome", "Let's", "Professional-grade" or exclamation marks.
 
-App record: bundle id com.bwk.signaturemaker, SKU signaturemaker, ASC app id 6830028405 (https://apps.apple.com/app/id6830028405, eas.json `ascAppId`). Not set yet: the Expo project bkdeveloper123/signaturemaker's id in app.json `extra.eas.projectId` (TODO_COWORK_EXPO_PROJECT_ID), the RevenueCat public iOS key in app.json `extra.revenueCatApiKeyIos` (TODO_COWORK_REVENUECAT_PUBLIC_IOS_KEY; the app runs with purchases off until it starts with `appl_`).
+App record: bundle id com.bwk.signaturemaker, SKU signaturemaker, ASC app id 6830028405 (https://apps.apple.com/app/id6830028405, eas.json `ascAppId`). Expo project bkdeveloper123/signaturemaker (projectId 588561f4-8e20-4bdd-9dfc-742100ee3ce7, app.json `extra.eas.projectId`), RevenueCat public iOS key in app.json `extra.revenueCatApiKeyIos` (set; the app runs with purchases off whenever it does not start with `appl_`).
 
 ## Name (28/30)
 Electronic Signature Creator
