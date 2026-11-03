@@ -2,6 +2,10 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-03: 1.0.0 build 1, store/metadata.md (same branch, no build).
+  - Name "Electronic Signature Maker" (26) with the two fallbacks in order, subtitle "Sign Documents & PDF Creator" (28), keywords as briefed (100, no name or subtitle word, no brand), the research behind them, promotional text (154), a description that leads with outcomes and says plainly it is not an identity-verified e-signature service (2,568), What's New, Productivity then Business, 4+, Data Not Collected with the one add-only Photos string, the three products and the RevenueCat setup, the App Review note (free first export and first document, what Pro adds, the X after 3 seconds, no account, how to test signing with any PDF) and the six-shot plan.
+  - Checked: lengths counted with node; copy grep: no em dashes, exclamation marks, banned words or brand names.
+
 - 2026-11-03: 1.0.0 build 1, the website (docs/, GitHub Pages; same branch, no build).
   - docs/index.html: title "Electronic Signature Maker: Draw a Signature and Sign PDFs on iPhone", meta description, canonical https://bkdigitalleads-cmyk.github.io/signaturemaker/, Open Graph and Twitter tags with og-image.png and its alt text, JSON-LD SoftwareApplication (name, the in-app name and the subtitle as alternateName, the three Pro offers) and FAQPage. Five questions, the same words in the page and the JSON-LD: how to make a transparent signature PNG, how to sign a PDF from Mail, whether it is legally binding (the legal line, plus: ask the sender if a document needs an identity-verified signature), whether anything is uploaded, what Pro costs. Three screenshots from the renders, with alt text. The legal line is in a note on the page.
   - docs/privacy.html (Data Not Collected; signatures and documents stay on the phone; the photo picker and add-only Photos access; RevenueCat's anonymous id; the one local reminder), docs/support.html (make, export, sign, Pro and restore, the share-sheet tip, the legal line), docs/style.css in the desk palette with a dark version, sitemap.xml, robots.txt.
