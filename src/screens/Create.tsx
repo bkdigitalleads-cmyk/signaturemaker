@@ -33,7 +33,7 @@ export default function Create({
   startTyped?: boolean;
 }) {
   const theme = useTheme();
-  const { width: winW } = useWindowDimensions();
+  const { width: winW, height: winH } = useWindowDimensions();
   const { prefs, setPrefs, isPro, askPro, library, setLibrary } = useApp();
   const initials = initialsFor != null;
   const [mode, setMode] = useState<'draw' | 'type'>(startTyped ? 'type' : 'draw');
@@ -47,7 +47,8 @@ export default function Create({
   const ink: InkId = initials ? initialsFor.ink : prefs.ink;
 
   const padW = winW - space.l * 2;
-  const padH = initials ? 180 : 232;
+  // The pad takes the room the screen has: about a third of its height, 220 to 320 points.
+  const padH = initials ? 180 : Math.round(Math.min(320, Math.max(220, winH * 0.34)));
 
   const choosePen = async (p: typeof prefs.pen) => {
     if (canUsePen(p, isPro) || (await askPro('pen'))) setPrefs({ pen: p });
@@ -110,7 +111,7 @@ export default function Create({
   return (
     <View style={{ flex: 1 }}>
       {onClose ? <TopBar theme={theme} onBack={onClose} closeGlyph="close" title={initials ? initialsFor.name : undefined} /> : null}
-      <ScrollView contentContainerStyle={[styles.scroll, onClose ? null : { paddingTop: space.l }]} keyboardShouldPersistTaps="handled" scrollEnabled={mode === 'type'}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: onClose ? space.s : space.l }]} keyboardShouldPersistTaps="handled" scrollEnabled={mode === 'type'}>
         <View style={styles.head}>
           <Title theme={theme}>{title}</Title>
           <View style={styles.modes}>
@@ -121,7 +122,7 @@ export default function Create({
 
         {mode === 'draw' ? (
           <>
-            <Pad theme={theme} width={padW} height={padH} strokes={strokes} onStroke={addStroke} pen={prefs.pen} size={prefs.size} inkHex={inkHex(ink)} placeholder={initials ? 'Initials here' : 'Sign here'} />
+            <Pad theme={theme} width={padW} height={padH} strokes={strokes} onStroke={addStroke} pen={prefs.pen} size={prefs.size} inkHex={inkHex(ink)} placeholder={initials ? 'Draw your initials' : undefined} />
             <View style={styles.tools}>
               <GlyphButton theme={theme} glyph="undo" label="Undo" onPress={undo} disabled={strokes.length === 0} />
               <GlyphButton theme={theme} glyph="redo" label="Redo" onPress={redo} disabled={undone.length === 0} />
@@ -203,6 +204,8 @@ function TypePanel({
         </Text>
         <View style={[styles.previewLine, { backgroundColor: theme.baseline }]} />
       </View>
+      {/* Initials take their signature's ink, so the inks show only for a new signature. */}
+      {initials ? null : (
       <View style={styles.inkRow} accessibilityRole="radiogroup" accessibilityLabel="Ink color">
         {INKS.map((i) => (
           <Tap
@@ -217,6 +220,7 @@ function TypePanel({
           </Tap>
         ))}
       </View>
+      )}
       <View style={[styles.fonts, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="radiogroup" accessibilityLabel="Font">
         {SCRIPT_FONTS.map((font, i) => {
           const on = font.id === fontId;
@@ -288,7 +292,7 @@ function WidePad({
   }
   if (!visible && opened) setOpened(false);
   const done = () => onDone(fitStrokes(scaleStrokes(local, 1 / k), normal.width, normal.height));
-  const placeholder = useMemo(() => 'Sign here, with the phone turned', []);
+  const placeholder = useMemo(() => 'Turn the phone and sign along the line', []);
   return (
     <Modal visible={visible} animationType={MODAL_ANIMATION} presentationStyle="fullScreen" onRequestClose={done} supportedOrientations={['portrait']}>
       <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -331,7 +335,7 @@ const styles = StyleSheet.create({
   previewLine: { position: 'absolute', left: space.xl, right: space.xl, bottom: 34, height: 1 },
   inkRow: { flexDirection: 'row', gap: space.xs },
   dotWrap: { width: 44, height: 44, borderRadius: radius.round, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 24, height: 24, borderRadius: radius.round },
+  dot: { width: 24, height: 24, borderRadius: radius.round, borderWidth: 1, borderColor: 'rgba(128, 124, 116, 0.35)' },
   fonts: { borderRadius: radius.large, borderWidth: 1, overflow: 'hidden' },
   fontRow: { flexDirection: 'row', alignItems: 'center', minHeight: 64, paddingHorizontal: space.l, gap: space.m },
   fontMeta: { flexDirection: 'row', alignItems: 'center', gap: space.xs, maxWidth: 130 },

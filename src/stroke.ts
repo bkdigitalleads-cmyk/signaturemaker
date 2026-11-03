@@ -48,7 +48,7 @@ export const PENS: PenInfo[] = [
 ];
 
 /** The three thickness steps, as the base width in canvas points. */
-export const BASE_WIDTH: Record<SizeStep, number> = { 0: 2.2, 1: 3.2, 2: 4.6 };
+export const BASE_WIDTH: Record<SizeStep, number> = { 0: 1.8, 1: 2.6, 2: 3.8 };
 
 /** Distance between smoothed samples, in canvas points. */
 export const SAMPLE_SPACING = 2;
@@ -134,7 +134,7 @@ function soften(v: number[], a: number): number[] {
 
 /** Width multiplier from speed (points per ms) for the Ink pen: slow is full, fast thins out. */
 export function inkSpeedFactor(speed: number): number {
-  return 0.42 + 1.08 * Math.exp(-Math.max(0, speed) / 0.85);
+  return 0.45 + 1.0 * Math.exp(-Math.max(0, speed) / 0.7);
 }
 
 /** Width multiplier from direction for the Fountain pen: `ty` is the tangent's downward part, -1 (straight up) to 1 (straight down). */

@@ -21,7 +21,7 @@ export default function Pad({
   pen,
   size,
   inkHex,
-  placeholder = 'Sign here',
+  placeholder = 'Draw with a finger or Apple Pencil',
   baseline = 0.7,
 }: {
   theme: Theme;

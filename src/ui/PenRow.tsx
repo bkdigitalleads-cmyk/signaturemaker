@@ -123,5 +123,5 @@ const styles = StyleSheet.create({
   second: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   inks: { flexDirection: 'row', gap: space.xs },
   dotWrap: { width: 44, height: 44, borderRadius: radius.round, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 24, height: 24, borderRadius: radius.round },
+  dot: { width: 24, height: 24, borderRadius: radius.round, borderWidth: 1, borderColor: 'rgba(128, 124, 116, 0.35)' },
 });

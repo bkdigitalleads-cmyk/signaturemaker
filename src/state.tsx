@@ -114,7 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const say = useCallback((text: string) => {
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
     setNotice(text);
-    noticeTimer.current = setTimeout(() => setNotice(null), 4200);
+    noticeTimer.current = setTimeout(() => setNotice(null), 3200);
   }, []);
 
   useEffect(() => {

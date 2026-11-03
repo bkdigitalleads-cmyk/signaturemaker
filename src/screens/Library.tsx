@@ -49,7 +49,7 @@ export default function Library({ onCreate, onExport, onInitials }: { onCreate: 
             <QuietButton theme={theme} glyph="create" label="Make a signature" onPress={onCreate} />
           </View>
         ) : (
-          library.map((sig, i) => (
+          library.map((sig) => (
             <Tap key={sig.id} onPress={() => setOpen(sig)} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.edge }]} pressedStyle={{ backgroundColor: theme.raised }} accessibilityRole="button" accessibilityLabel={`${sig.name}${sig.isDefault ? ', default' : ''}${sig.initials ? ', with initials' : ''}`} accessibilityHint="Opens export, initials, rename, order and delete">
               <View style={[styles.paper, { backgroundColor: theme.paper }]}>
                 <MarkView mark={sig.main} height={64} maxWidth={cardW - space.l * 2 - (sig.initials ? 72 : 0)} />
@@ -68,7 +68,6 @@ export default function Library({ onCreate, onExport, onInitials }: { onCreate: 
                     <Text style={[type.small, { color: theme.ink }]}>Default</Text>
                   </View>
                 ) : null}
-                <Text style={[type.small, { color: theme.inkFaint }]}>{i + 1}</Text>
               </View>
             </Tap>
           ))

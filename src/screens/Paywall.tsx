@@ -145,7 +145,7 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
             <GlyphButton theme={theme} glyph="close" label={keepGoing ? 'Close and continue with the corner mark' : 'Close'} onPress={close} disabled={!canClose} color={theme.inkSoft} />
           </View>
 
-          <Text style={[type.title, styles.pad, compact ? { marginTop: space.s } : { marginTop: space.xl }, { color: theme.ink }]} accessibilityRole="header">
+          <Text style={[type.title, styles.pad, compact ? { marginTop: space.s } : { marginTop: space.l }, { color: theme.ink }]} accessibilityRole="header">
             {headline}
           </Text>
           <Text style={[type.body, styles.pad, styles.line, { color: theme.inkSoft }]}>{copy.line}</Text>
@@ -240,8 +240,8 @@ const styles = StyleSheet.create({
   closeRow: { alignItems: 'flex-end', paddingHorizontal: space.s, paddingTop: space.xs },
   pad: { paddingHorizontal: space.xl },
   line: { marginTop: space.s },
-  plans: { marginTop: space.xxl, marginHorizontal: space.l, borderRadius: radius.large, borderWidth: 1, overflow: 'hidden' },
-  plan: { flexDirection: 'row', alignItems: 'center', gap: space.m, minHeight: 72, paddingHorizontal: space.l, paddingVertical: space.m },
+  plans: { marginTop: space.xl, marginHorizontal: space.l, borderRadius: radius.large, borderWidth: 1, overflow: 'hidden' },
+  plan: { flexDirection: 'row', alignItems: 'center', gap: space.m, minHeight: 64, paddingHorizontal: space.l, paddingVertical: space.m },
   planCompact: { minHeight: 60, paddingVertical: space.s },
   radio: { width: 24, height: 24, borderRadius: radius.round, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: radius.round },

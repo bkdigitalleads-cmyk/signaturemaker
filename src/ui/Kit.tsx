@@ -276,7 +276,7 @@ export function TopBar({ theme, title, onBack, closeGlyph = 'back', right }: { t
 }
 
 /** A short line at the bottom for a few seconds ("Saved. It has a transparent background."). */
-export function Toast({ theme, text, bottom }: { theme: Theme; text: string | null; bottom: number }) {
+export function Toast({ theme, text, top }: { theme: Theme; text: string | null; top: number }) {
   const fade = useRef(new Animated.Value(0)).current;
   const last = useRef(text);
   if (text) last.current = text;
@@ -284,7 +284,7 @@ export function Toast({ theme, text, bottom }: { theme: Theme; text: string | nu
     Animated.timing(fade, { toValue: text ? 1 : 0, duration: 180, useNativeDriver: true }).start();
   }, [text, fade]);
   return (
-    <Animated.View pointerEvents="none" style={[styles.toast, { bottom: bottom + space.m, opacity: fade, backgroundColor: theme.ink }]} accessibilityLiveRegion="polite">
+    <Animated.View pointerEvents="none" style={[styles.toast, { top: top + space.s, opacity: fade, backgroundColor: theme.ink }]} accessibilityLiveRegion="polite">
       <Text style={[type.small, { color: theme.bg, textAlign: 'center' }]}>{last.current}</Text>
     </Animated.View>
   );

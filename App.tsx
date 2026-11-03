@@ -21,7 +21,7 @@ import Sign from './src/screens/Sign';
 import Settings from './src/screens/Settings';
 import PaywallModal from './src/screens/Paywall';
 import Welcome, { NeedStep, TrialSteps } from './src/screens/Welcome';
-import TabBar, { Tab, TAB_BAR_HEIGHT } from './src/ui/TabBar';
+import TabBar, { Tab } from './src/ui/TabBar';
 import { Toast } from './src/ui/Kit';
 
 /** A screen over the tabs. */
@@ -161,7 +161,7 @@ function Shell() {
       <StatusBar style={theme.isDark ? 'light' : 'dark'} />
       <View style={{ flex: 1 }}>{body}</View>
       {over == null ? <TabBar theme={theme} tab={tab} onTab={setTab} /> : null}
-      <Toast theme={theme} text={notice} bottom={(over == null ? TAB_BAR_HEIGHT : 0) + insets.bottom} />
+      <Toast theme={theme} text={notice} top={insets.top} />
       <PaywallModal privacyUrl={PRIVACY_URL} />
     </View>
   );

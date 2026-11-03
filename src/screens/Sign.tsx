@@ -26,8 +26,8 @@ import { maybeRequestReview } from '../reviews';
 import { libraryPngUri } from '../store';
 import PageView from '../ui/PageView';
 import MarkView from '../ui/MarkView';
-import Glyph from '../ui/Glyph';
-import { Caption, Drawer, Field, GlyphButton, InkButton, Panel, Pill, QuietButton, Row, Tap, TopBar } from '../ui/Kit';
+import Glyph, { GlyphName } from '../ui/Glyph';
+import { Caption, Drawer, Field, GlyphButton, InkButton, Panel, QuietButton, Row, Tap, TopBar } from '../ui/Kit';
 import { MODAL_ANIMATION, placeHaptic, savedHaptic, tick } from '../ui/motion';
 import Create from './Create';
 import PaywallModal from './Paywall';
@@ -207,7 +207,11 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
     ]);
   };
 
-  if (result) return <Signed theme={theme} result={result} first={usage.documents === 1} onClose={onClose} say={say} />;
+  if (result) {
+    // The page that was signed, as it was flattened: the first page with a placement.
+    const shownPage = Math.min(...placements.map((p) => p.page));
+    return <Signed theme={theme} result={result} first={usage.documents === 1} onClose={onClose} say={say} preview={{ doc, page: shownPage, placements: placements.filter((p) => p.page === shownPage), library }} />;
+  }
 
   const scale = frame.scale;
   return (
@@ -257,13 +261,16 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
         {sel && (sel.kind === 'date' || sel.kind === 'text') ? (
           <Field theme={theme} value={sel.text ?? ''} onChangeText={(t) => update(sel.id, (x) => ({ ...x, text: t }))} placeholder={sel.kind === 'date' ? 'Date' : 'Text'} accessibilityLabel={sel.kind === 'date' ? 'Date on the page' : 'Text on the page'} returnKeyType="done" />
         ) : null}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tools} keyboardShouldPersistTaps="handled">
-          <Pill theme={theme} glyph="create" label="Add signature" on={false} onPress={() => addStamp('signature')} />
-          <Pill theme={theme} glyph="initials" label="Add initials" on={false} locked={!canUseStamp('initials', isPro)} onPress={() => addStamp('initials')} />
-          <Pill theme={theme} glyph="date" label="Add date" on={false} locked={!canUseStamp('date', isPro)} onPress={() => addStamp('date')} />
-          <Pill theme={theme} glyph="text" label="Add text" on={false} locked={!canUseStamp('text', isPro)} onPress={() => addStamp('text')} />
-          {sel ? <Pill theme={theme} glyph="trash" label="Remove" on={false} onPress={() => { setPlacements((all) => all.filter((x) => x.id !== sel.id)); setSelected(null); }} /> : null}
-        </ScrollView>
+        <View style={styles.tools}>
+          <Tool theme={theme} glyph="create" label="Add signature" short="Signature" onPress={() => addStamp('signature')} />
+          <Tool theme={theme} glyph="initials" label="Add initials" short="Initials" locked={!canUseStamp('initials', isPro)} onPress={() => addStamp('initials')} />
+          <Tool theme={theme} glyph="date" label="Add date" short="Date" locked={!canUseStamp('date', isPro)} onPress={() => addStamp('date')} />
+          {sel ? (
+            <Tool theme={theme} glyph="trash" label="Remove the selected one" short="Remove" onPress={() => { setPlacements((all) => all.filter((x) => x.id !== sel.id)); setSelected(null); }} />
+          ) : (
+            <Tool theme={theme} glyph="text" label="Add text" short="Text" locked={!canUseStamp('text', isPro)} onPress={() => addStamp('text')} />
+          )}
+        </View>
         <View style={styles.doneRow}>
           {doc.pages.length > 1 ? (
             <View style={styles.pager}>
@@ -341,6 +348,27 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
   );
 }
 
+/** One of the four tools under the page: a glyph over a short word; VoiceOver reads the full action. */
+function Tool({ theme, glyph, label, short, onPress, locked = false }: { theme: Theme; glyph: GlyphName; label: string; short: string; onPress: () => void; locked?: boolean }) {
+  return (
+    <Tap
+      onPress={onPress}
+      style={[styles.tool, { backgroundColor: theme.surface, borderColor: theme.edge }]}
+      pressedStyle={{ backgroundColor: theme.raised }}
+      accessibilityRole="button"
+      accessibilityLabel={locked ? `${label}, Pro` : label}
+    >
+      <Glyph name={glyph} size={22} color={theme.ink} />
+      <View style={styles.toolLabel}>
+        <Text style={[type.small, { color: theme.ink }]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+          {short}
+        </Text>
+        {locked ? <Glyph name="lock" size={12} color={theme.inkFaint} /> : null}
+      </View>
+    </Tap>
+  );
+}
+
 /** A placement on the page. Selected: an ink outline and a round corner handle. VoiceOver can resize or remove it. */
 function Placed({ theme, p, scale, selected, library, onAction }: { theme: Theme; p: Placement; scale: number; selected: boolean; library: Signature[]; onAction: (a: 'bigger' | 'smaller' | 'delete') => void }) {
   const sig = library.find((s) => s.id === p.signatureId);
@@ -375,7 +403,23 @@ function Placed({ theme, p, scale, selected, library, onAction }: { theme: Theme
 }
 
 /** After Done signing: the file is saved; send it back. */
-function Signed({ theme, result, first, onClose, say }: { theme: Theme; result: Finished; first: boolean; onClose: () => void; say: (t: string) => void }) {
+function Signed({
+  theme,
+  result,
+  first,
+  onClose,
+  say,
+  preview,
+}: {
+  theme: Theme;
+  result: Finished;
+  first: boolean;
+  onClose: () => void;
+  say: (t: string) => void;
+  preview: { doc: OpenDoc; page: number; placements: Placement[]; library: Signature[] };
+}) {
+  const box = displaySize(preview.doc.pages[preview.page]);
+  const frame = fitRect(box, { width: 230, height: 300 });
   const [mail, setMail] = useState(false);
   useEffect(() => {
     MailComposer.isAvailableAsync().then(setMail).catch(() => setMail(false));
@@ -405,8 +449,11 @@ function Signed({ theme, result, first, onClose, say }: { theme: Theme; result: 
     <View style={{ flex: 1 }}>
       <TopBar theme={theme} onBack={onClose} closeGlyph="close" />
       <View style={styles.signed}>
-        <View style={[styles.fileIcon, { backgroundColor: theme.paper, borderColor: theme.edge }]}>
-          <Glyph name="documents" size={44} color={theme.paperInk} weight={1.4} />
+        <View style={[styles.thumb, { width: frame.width, height: frame.height, borderColor: theme.edge }]} accessible accessibilityRole="image" accessibilityLabel={`Page ${preview.page + 1} of ${result.doc.name}, signed`}>
+          <PageView doc={preview.doc} page={preview.page} width={frame.width} height={frame.height} />
+          {preview.placements.map((p) => (
+            <Placed key={p.id} theme={theme} p={p} scale={frame.scale} selected={false} library={preview.library} onAction={() => {}} />
+          ))}
         </View>
         <Text style={[type.title, { color: theme.ink, textAlign: 'center' }]} accessibilityRole="header">
           Signed.
@@ -428,7 +475,7 @@ const styles = StyleSheet.create({
   area: { flex: 1, marginHorizontal: space.l, marginVertical: space.s },
   sheet: { borderWidth: 1, borderRadius: 2, overflow: 'hidden' },
   bottom: { borderTopWidth: 1, paddingTop: space.m, paddingHorizontal: space.l, gap: space.m },
-  tools: { gap: space.s },
+  tools: { flexDirection: 'row', gap: space.s },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: space.m },
   pager: { flexDirection: 'row', gap: space.s },
   pick: { flexDirection: 'row', alignItems: 'center', gap: space.m, padding: space.m },
@@ -436,6 +483,8 @@ const styles = StyleSheet.create({
   selFrame: { borderWidth: 1.5, borderRadius: 4, margin: -4 },
   handle: { position: 'absolute', right: -11, bottom: -11, width: 22, height: 22, borderRadius: radius.round, borderWidth: 2 },
   signed: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxl, gap: space.m },
-  fileIcon: { width: 96, height: 120, borderRadius: radius.small, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: space.m },
+  thumb: { borderWidth: 1, borderRadius: 2, overflow: 'hidden', marginBottom: space.l },
+  tool: { flex: 1, minHeight: 56, borderRadius: radius.small, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: space.xs },
+  toolLabel: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   signedActions: { paddingHorizontal: space.l, paddingBottom: space.l, gap: space.s },
 });

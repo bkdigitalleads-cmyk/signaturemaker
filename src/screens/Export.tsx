@@ -30,7 +30,7 @@ const CHOICES: { id: Choice; label: string; background: Background; format: Form
 export default function Export({ sig, onBack }: { sig: Signature; onBack: () => void }) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const { isPro, usage, askPro, countUsage, say } = useApp();
+  const { isPro, usage, askPro, countUsage, say, prefs } = useApp();
   const [which, setWhich] = useState<'main' | 'initials'>('main');
   const [choice, setChoice] = useState<Choice>('transparent');
   const [scale, setScale] = useState<2 | 3>(3);
@@ -123,7 +123,7 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
             <Shown preview={preview} boxW={boxW - space.xl * 2} boxH={170} aspect={aspectOf(mark)} label={`${sig.name}, ${opt.label}`} />
           </Checker>
         ) : (
-          <Letter theme={theme} preview={preview} width={boxW} aspect={aspectOf(mark)} name={sig.name.split(',')[0]} />
+          <Letter theme={theme} preview={preview} width={boxW} aspect={aspectOf(mark)} name={sig.main.art.kind === 'typed' ? sig.main.art.text : prefs.typedName} />
         )}
         <Caption theme={theme}>
           {view === 'checker' && choice === 'transparent' ? 'The gray squares show where it is clear. On a page or in an email, only the ink shows.' : 'This is the file as it will be saved.'}
@@ -152,7 +152,7 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
       <View style={styles.footer}>
         <View style={styles.row}>
           <QuietButton theme={theme} glyph="photo" label="Save to Photos" onPress={onPhotos} grow disabled={busy} />
-          <QuietButton theme={theme} glyph="copy" label="Copy" onPress={onCopy} grow disabled={busy} />
+          <QuietButton theme={theme} glyph="copy" label="Copy" onPress={onCopy} disabled={busy} />
         </View>
         <InkButton theme={theme} glyph="share" label={`Share ${opt.label}`} onPress={onShare} busy={busy} hint="Mail, Messages, Files and other apps" />
       </View>
@@ -186,7 +186,7 @@ function Letter({ theme, preview, width, aspect, name }: { theme: Theme; preview
       <View style={{ height: 64, justifyContent: 'center' }}>
         <Shown preview={preview} boxW={width * 0.5} boxH={58} aspect={aspect} label="" />
       </View>
-      <Text style={text}>{name}</Text>
+      {name ? <Text style={text}>{name}</Text> : null}
     </View>
   );
 }
