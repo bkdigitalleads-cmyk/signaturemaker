@@ -146,7 +146,7 @@ export function parseLibrary(json: string | null): Signature[] {
       name: typeof s.name === 'string' && s.name.trim() ? s.name : 'Signature',
       ink: INKS.some((i) => i.id === s.ink) ? s.ink : 'black',
       main,
-      initials: parseMark(s.initials) ?? undefined,
+      ...(parseMark(s.initials) ? { initials: parseMark(s.initials)! } : {}),
       isDefault: s.isDefault === true,
       createdAt: typeof s.createdAt === 'number' ? s.createdAt : 0,
     });

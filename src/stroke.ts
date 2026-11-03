@@ -158,7 +158,8 @@ export function layout(stroke: Stroke): Samples {
     const speed: number[] = [0];
     for (let i = 1; i < n; i++) {
       const dt = Math.max(1, pts[i][2] - pts[i - 1][2]);
-      speed.push(hyp(x[i] - x[i - 1], y[i] - y[i - 1]) / dt);
+      // In the units the stroke was drawn in, so scaling it (wide mode) never changes how it looks.
+      speed.push(hyp(x[i] - x[i - 1], y[i] - y[i - 1]) / dt / (stroke.k ?? 1));
     }
     speed[0] = speed[1] ?? 0;
     const s = soften(speed, 0.18);

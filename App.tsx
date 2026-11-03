@@ -37,7 +37,7 @@ function Shell() {
   overRef.current = over;
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
   // New installs: three value screens, what you need today, the trial and reminder screens, then the paywall.
-  const [step, setStep] = useState<'welcome' | 'need' | 'trial' | 'paywall'>('welcome');
+  const [step, setStep] = useState<'intro' | 'need' | 'trial' | 'paywall'>('intro');
   const paywallOpened = useRef(false);
   const launchAsked = useRef(false);
 
@@ -111,7 +111,7 @@ function Shell() {
     return (
       <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: insets.top }}>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
-        {step === 'welcome' && <Welcome onDone={() => setStep('need')} />}
+        {step === 'intro' && <Welcome onDone={() => setStep('need')} />}
         {step === 'need' && <NeedStep onDone={() => setStep('trial')} />}
         {(step === 'trial' || step === 'paywall') && <TrialSteps onDone={openOnboardingPaywall} />}
         <PaywallModal privacyUrl={PRIVACY_URL} onboarding />
@@ -150,7 +150,7 @@ function Shell() {
       <Settings
         onReplayOnboarding={() => {
           paywallOpened.current = false;
-          setStep('welcome');
+          setStep('intro');
           setOnboarded(false);
         }}
       />
