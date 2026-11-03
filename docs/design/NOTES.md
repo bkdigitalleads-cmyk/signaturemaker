@@ -33,8 +33,15 @@ Motion is quiet: sheets and modals fade; feedback is by touch (a success haptic 
 - Typed (`07-type-fonts`): the name, its preview on paper, the inks and the fonts as rows showing the name; initials (`08-initials`).
 - Export (`09-export-checkerboard`, `10-export-letter`, `11-export-marked`, the second free export after closing the paywall).
 - Library (`12-library`, `13-library-initials`, `14-library-actions`).
-- Documents (`15-documents-empty`, `16-document-pages`, `17-add-signature` with the default first, `18-placement-resize` with the corner handle being pulled, `19-signed`, `20-documents`).
-- Paywalls (`21-paywall-onboarding` with Weekly and the trial, `22-paywall-in-app` from the second export with Lifetime first), Settings (`23-settings`), onboarding (`24` to `29`).
+- Documents (`15-documents-empty`, `16-document-pages`, `17-add-signature` with the default first, `18-placement-resize` with the corner handle being pulled, `19-stamps` with the signature, the printed name, the date and initials on one page, `20-signed`, `21-documents`).
+- Paywalls (`22-paywall-onboarding` with the person's own signature at the top, Weekly and the trial; `23-paywall-in-app` from the second export with Lifetime first), the Claim sheet after the onboarding X (`24-claim`), Settings (`25-settings`, `26-settings-about`).
+- Onboarding (`27` to `35`): the signature drawing itself in (`27` mid-draw, `28` finished), the transparent PNG next to the letter (`29`), the lease (`30`), what you need today (`31`), Sign here empty and signed (`32`, `33`), the trial and the reminder (`34`, `35`).
+
+The store screenshots (`store/screenshots/`, by `store/screenshots.js`) are six of these screens on the desk colour with a caption in Newsreader above each: no device frames, gradients or emoji.
+
+## Onboarding (Nov 3 follow-up)
+
+The value screens used to be type alone. They now show the product, drawn by the app's own renderer: a sample signature (`src/sample.ts`) drawing itself in once with the Ink pen at the speed it was drawn and stopping (finished at once with Reduce Motion), the same signature on the checkerboard next to a letter, and the foot of a lease page with the signature on the tenant line. The headlines stay one short line in the title size. The letter and the page are drawn documents, so their text has its own small sizes, like the export screen's letter. After "What do you need today?" the person signs once on the real canvas ("Sign here", Continue turns on with ink, "Skip for now"), and that signature is the default and shows small on the paywall ("Your signature is saved.").
 
 ## The "does it look AI-built" pass
 
@@ -44,7 +51,7 @@ Migraine Log's polish pass (docs/design/NOTES.md there) named the tells: too man
 - "Sign here" was the title and a placeholder on the pad at once; the pad now says how to use it ("Draw with a finger or Apple Pencil") and the cross on the line does the rest.
 - Toasts sat over the bottom buttons; they now show under the status bar for about 3 seconds.
 - The library rows had order numbers (1, 2) on the right, which said nothing; gone. Order is the order you see.
-- The sign tools were a horizontal strip of pills cut off at the edge ("Add da"); they are four equal tiles (a glyph over Signature, Initials, Date, Text; VoiceOver reads "Add signature" and so on), and Text becomes Remove while a placement is selected.
+- The sign tools were a horizontal strip of pills cut off at the edge ("Add da"); they are four equal tiles (a glyph over Signature, Initials, Date, Text; VoiceOver reads "Add signature" and so on). Remove is a round trash button beside Done signing while a placement is selected (it used to replace Text, which hid Text until you tapped away).
 - "Signed." was a generic document icon over a title; it now shows the signed page itself, with the signature where it was placed.
 - "Save to Photos" truncated next to Copy; Copy no longer stretches.
 - The black and navy ink dots disappeared on the dark desk; every ink dot has a faint ring.

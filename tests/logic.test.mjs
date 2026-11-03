@@ -243,6 +243,12 @@ test('hit testing: the handle of the selected one resizes, the topmost one under
   assert.equal(P.hitTest(ps, 0, 500, 500, o), null);
   assert.deepEqual(P.hitTest(ps, 1, 110, 110, o), { id: 'c', mode: 'move' });
   assert.deepEqual(P.toFront(ps, 'a').map((p) => p.id), ['b', 'c', 'a']);
+  // A small placement: its middle moves it even though the handle zone reaches it; its corner still resizes.
+  const small = [{ id: 's', page: 0, kind: 'initials', x: 100, y: 100, width: 30, height: 20 }];
+  const big = { handle: 37, slop: 4, selectedId: 's' };
+  assert.deepEqual(P.hitTest(small, 0, 115, 110, big), { id: 's', mode: 'move' });
+  assert.deepEqual(P.hitTest(small, 0, 128, 118, big), { id: 's', mode: 'resize' });
+  assert.deepEqual(P.hitTest(small, 0, 140, 125, big), { id: 's', mode: 'resize' }, 'just outside the corner');
 });
 
 // ---------- flattening with pdf-lib ----------

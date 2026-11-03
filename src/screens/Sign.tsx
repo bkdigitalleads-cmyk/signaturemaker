@@ -265,11 +265,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
           <Tool theme={theme} glyph="create" label="Add signature" short="Signature" onPress={() => addStamp('signature')} />
           <Tool theme={theme} glyph="initials" label="Add initials" short="Initials" locked={!canUseStamp('initials', isPro)} onPress={() => addStamp('initials')} />
           <Tool theme={theme} glyph="date" label="Add date" short="Date" locked={!canUseStamp('date', isPro)} onPress={() => addStamp('date')} />
-          {sel ? (
-            <Tool theme={theme} glyph="trash" label="Remove the selected one" short="Remove" onPress={() => { setPlacements((all) => all.filter((x) => x.id !== sel.id)); setSelected(null); }} />
-          ) : (
-            <Tool theme={theme} glyph="text" label="Add text" short="Text" locked={!canUseStamp('text', isPro)} onPress={() => addStamp('text')} />
-          )}
+          <Tool theme={theme} glyph="text" label="Add text" short="Text" locked={!canUseStamp('text', isPro)} onPress={() => addStamp('text')} />
         </View>
         <View style={styles.doneRow}>
           {doc.pages.length > 1 ? (
@@ -277,6 +273,18 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
               <GlyphButton theme={theme} glyph="back" label="Previous page" onPress={() => { tick(); setSelected(null); setPage(Math.max(0, page - 1)); }} disabled={page === 0} filled />
               <GlyphButton theme={theme} glyph="chevron" label="Next page" onPress={() => { tick(); setSelected(null); setPage(Math.min(doc.pages.length - 1, page + 1)); }} disabled={page === doc.pages.length - 1} filled />
             </View>
+          ) : null}
+          {sel ? (
+            <GlyphButton
+              theme={theme}
+              glyph="trash"
+              label={`Remove the selected ${sel.kind}`}
+              filled
+              onPress={() => {
+                setPlacements((all) => all.filter((x) => x.id !== sel.id));
+                setSelected(null);
+              }}
+            />
           ) : null}
           <View style={{ flex: 1 }}>
             <InkButton theme={theme} label="Done signing" onPress={done} disabled={placements.length === 0} busy={busy} hint={placements.length === 0 ? 'Add a signature first' : 'Saves a signed copy. The original stays as it is.'} />

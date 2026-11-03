@@ -168,7 +168,12 @@ export function hitTest(placements: Placement[], page: number, x: number, y: num
   if (sel) {
     const hx = sel.x + sel.width;
     const hy = sel.y + sel.height;
-    if (Math.abs(x - hx) <= opts.handle && Math.abs(y - hy) <= opts.handle) return { id: sel.id, mode: 'resize' };
+    // Near the corner, and either outside the box or in its last third, so a small
+    // placement (initials, a date) can still be grabbed by its middle and moved.
+    const nearCorner = Math.abs(x - hx) <= opts.handle && Math.abs(y - hy) <= opts.handle;
+    const inside = x >= sel.x && x <= hx && y >= sel.y && y <= hy;
+    const cornerThird = x >= sel.x + sel.width * (2 / 3) && y >= sel.y + sel.height * (2 / 3);
+    if (nearCorner && (!inside || cornerThird)) return { id: sel.id, mode: 'resize' };
   }
   for (let i = on.length - 1; i >= 0; i--) {
     const p = on[i];
