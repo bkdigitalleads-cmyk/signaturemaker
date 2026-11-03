@@ -2,20 +2,22 @@
 
 Everything here is pasted into App Store Connect by Brian and Cowork. No em dashes anywhere, no brand words (no other signing products or PDF software), no "Unlock", "Premium", "Seamless", "Effortless", "Welcome", "Let's", "Professional-grade" or exclamation marks.
 
-App record: bundle id com.bwk.signaturemaker, SKU signaturemaker. Not created yet: the ASC app id goes in eas.json `ascAppId` (TODO_COWORK_ASC_APP_ID), the Expo project bkdeveloper123/signaturemaker's id in app.json `extra.eas.projectId` (TODO_COWORK_EXPO_PROJECT_ID), the RevenueCat public iOS key in app.json `extra.revenueCatApiKeyIos` (TODO_COWORK_REVENUECAT_PUBLIC_IOS_KEY; the app runs with purchases off until it starts with `appl_`).
+App record: bundle id com.bwk.signaturemaker, SKU signaturemaker, ASC app id 6830028405 (https://apps.apple.com/app/id6830028405, eas.json `ascAppId`). Not set yet: the Expo project bkdeveloper123/signaturemaker's id in app.json `extra.eas.projectId` (TODO_COWORK_EXPO_PROJECT_ID), the RevenueCat public iOS key in app.json `extra.revenueCatApiKeyIos` (TODO_COWORK_REVENUECAT_PUBLIC_IOS_KEY; the app runs with purchases off until it starts with `appl_`).
 
-## Name (26/30)
-Electronic Signature Maker
+## Name (28/30)
+Electronic Signature Creator
 
-Carries "signature maker" and "electronic signature" as exact phrases. If App Store Connect says it is taken, in this order: "Electronic Signature Creator" (28), then "Signature Maker & Creator" (25). Home screen name and in-app name (app.json `name`): Signature Maker.
+"Electronic Signature Maker" was taken in App Store Connect, so the record was created with the first fallback. It carries "electronic signature" and "signature creator" as exact phrases. Home screen name and in-app name (app.json `name`): Signature Maker.
 
-## Subtitle (28/30)
-Sign Documents & PDF Creator
+## Subtitle (26/30)
+Sign Documents & PDF Maker
+
+"Signature maker" still indexes across the name and the subtitle (Apple combines their words), and "sign documents" and "sign pdf" stay exact phrases.
 
 ## Keywords (100/100)
 esign,esignature,draw,handwritten,autograph,initials,fill,forms,contract,png,transparent,generator,e
 
-Rule: no word from the name or subtitle (electronic, signature, maker, sign, documents, pdf, creator), no brand names. Apple combines words across the name, subtitle and keywords, so "signature creator", "sign pdf", "draw signature", "transparent signature png", "signature generator", "fill forms" and "e signature" are covered without repeating a word. The last keyword, "e", is as briefed (it pairs with "signature" for "e signature"). Counted with node: 100 characters exactly.
+Rule: no word from the name or subtitle (electronic, signature, creator, sign, documents, pdf, maker), no brand names. Apple combines words across the name, subtitle and keywords, so "signature maker", "sign pdf", "draw signature", "transparent signature png", "signature generator", "fill forms" and "e signature" are covered without repeating a word. The last keyword, "e", is as briefed (it pairs with "signature" for "e signature"). Counted with node: 100 characters exactly.
 
 Research behind them (Nov 2, ASOMobile Apple search popularity, iTunes top 10, AppMagic revenue): "signature maker" 40, "sign documents" 38, "electronic signature" 34, "signature creator" 32, "sign pdf" 27. Eight of the top ten on "signature maker" have under 100 ratings; a 90-day-old app with 0 ratings is first on "electronic signature" and "signature creator"; apps under 5,000 downloads show $5K to $10K revenue bands.
 

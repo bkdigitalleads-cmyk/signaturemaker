@@ -541,7 +541,8 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.ok(!JSON.stringify(app.ios.infoPlist).match(/Camera|Microphone|Location/));
   const eas = JSON.parse(readFileSync(`${ROOT}eas.json`, 'utf8'));
   assert.equal(eas.cli.appVersionSource, 'local');
-  for (const v of [app.extra.eas.projectId, app.extra.revenueCatApiKeyIos, eas.submit.production.ios.ascAppId]) assert.match(v, /^TODO_COWORK_/);
+  for (const v of [app.extra.eas.projectId, app.extra.revenueCatApiKeyIos]) assert.match(v, /^TODO_COWORK_/);
+  assert.equal(eas.submit.production.ios.ascAppId, '6830028405');
 });
 
 function walk(dir, ext) {
