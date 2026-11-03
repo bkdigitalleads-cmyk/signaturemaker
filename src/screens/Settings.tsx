@@ -6,7 +6,7 @@ import { useApp } from '../state';
 import { restorePurchases } from '../purchases';
 import { cancelTrialReminder } from '../reminder';
 import { kvSet } from '../store';
-import { PRIVACY_URL, SUPPORT_URL, TERMS_URL } from '../links';
+import { PRIVACY_URL, SUPPORT_EMAIL, SUPPORT_MAIL_URL, SUPPORT_URL, TERMS_URL } from '../links';
 import { Caption, Label, Panel, Row, Title } from '../ui/Kit';
 
 /** Pro, restore, help and the one-line About. Test tools behind seven taps on the version, in test builds only. */
@@ -71,7 +71,14 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
       <View>
         <Label theme={theme}>Help</Label>
         <Panel theme={theme}>
-          <Row theme={theme} first label="Support" sub="How-tos and how to reach us" onPress={() => Linking.openURL(SUPPORT_URL)} />
+          <Row theme={theme} first label="Support" sub="How to make, export and sign" onPress={() => Linking.openURL(SUPPORT_URL)} />
+          <Row
+            theme={theme}
+            label="Email support"
+            sub={SUPPORT_EMAIL}
+            hint="Opens Mail with the subject Signature Maker support"
+            onPress={() => Linking.openURL(SUPPORT_MAIL_URL).catch(() => Alert.alert('Mail did not open', `Write to ${SUPPORT_EMAIL}.`))}
+          />
           <Row theme={theme} label="Privacy Policy" onPress={() => Linking.openURL(PRIVACY_URL)} />
           <Row theme={theme} label="Terms of Use (EULA)" onPress={() => Linking.openURL(TERMS_URL)} />
         </Panel>

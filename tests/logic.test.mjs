@@ -664,8 +664,15 @@ test('copy: no em dashes, banned words or brand names in the app, the website or
       assert.equal(hit, null, `${w} in ${f}`);
     }
   }
-  // No personal email in the app or on the website: the support page is the way in.
-  for (const f of [...walk(`${ROOT}src`, ['.ts', '.tsx']), `${ROOT}App.tsx`, ...walk(`${ROOT}docs`, ['.html'])]) assert.ok(!/@gmail\.com|mailto:/i.test(readFileSync(f, 'utf8')), `email in ${f}`);
+  // The personal address never appears anywhere; the support address is on the support page and in Settings.
+  for (const f of [...walk(`${ROOT}src`, ['.ts', '.tsx']), `${ROOT}App.tsx`, ...walk(`${ROOT}docs`, ['.html']), ...walk(`${ROOT}store`, ['.md', '.js']).filter((p) => !p.includes('node_modules')), `${ROOT}README.md`, `${ROOT}NOTES.md`, `${ROOT}CLAUDE.md`])
+    assert.ok(!/brianwkershner/i.test(readFileSync(f, 'utf8')), `personal address in ${f}`);
+  const support = readFileSync(`${ROOT}docs/support.html`, 'utf8');
+  assert.match(support, /mailto:bkdigitalleads@gmail\.com/);
+  assert.match(support, /we reply within two business days/);
+  assert.match(readFileSync(`${ROOT}src/links.ts`, 'utf8'), /SUPPORT_EMAIL = 'bkdigitalleads@gmail\.com'/);
+  assert.match(readFileSync(`${ROOT}src/screens/Settings.tsx`, 'utf8'), /label="Email support"[\s\S]{0,200}SUPPORT_MAIL_URL/);
+  assert.match(readFileSync(`${ROOT}src/links.ts`, 'utf8'), /subject=\$\{encodeURIComponent\('Signature Maker support'\)\}/);
   // User-facing strings in screens: no exclamation marks inside quotes.
   for (const f of walk(`${ROOT}src/screens`, ['.tsx'])) {
     const strings = readFileSync(f, 'utf8').match(/'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|>[^<>{}\n]+</g) ?? [];

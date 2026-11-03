@@ -86,6 +86,12 @@ Permissions: only NSPhotoLibraryAddUsageDescription (add-only, asked the first t
 - RevenueCat: entitlement `pro` (attach all three products), offering `default` with the three packages.
 - Prices and trial text in the app always come from StoreKit.
 
+## App Review contact and support
+- Support URL: https://bkdigitalleads-cmyk.github.io/signaturemaker/support.html (has the contact address).
+- Contact email for App Review and on the support page: bkdigitalleads@gmail.com. Settings in the app has "Email support", which opens Mail with the subject "Signature Maker support".
+- Marketing URL: https://bkdigitalleads-cmyk.github.io/signaturemaker/
+- Privacy Policy URL: https://bkdigitalleads-cmyk.github.io/signaturemaker/privacy.html
+
 ## App Review note (paste into ASC, Notes)
 Signature Maker makes signature images and places them on documents the user already has. It does not provide a legally binding e-signature service, identity verification, audit trails or document delivery; the About section in Settings says so in one line ("Signature Maker creates a signature image and places it on your document. It does not verify identity or certify signatures."). There is no account or sign-in and no network feature; nothing the user makes or opens is uploaded.
 
