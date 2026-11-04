@@ -8,11 +8,10 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F4F1EA",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.bwk.signaturemaker",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationCategoryType": "public.app-category.productivity",
@@ -22,13 +21,19 @@
             "CFBundleTypeName": "PDF document",
             "CFBundleTypeRole": "Viewer",
             "LSHandlerRank": "Alternate",
-            "LSItemContentTypes": ["com.adobe.pdf"]
+            "LSItemContentTypes": [
+              "com.adobe.pdf"
+            ]
           },
           {
             "CFBundleTypeName": "Image",
             "CFBundleTypeRole": "Viewer",
             "LSHandlerRank": "Alternate",
-            "LSItemContentTypes": ["public.jpeg", "public.png", "public.heic"]
+            "LSItemContentTypes": [
+              "public.jpeg",
+              "public.png",
+              "public.heic"
+            ]
           }
         ]
       }
