@@ -196,3 +196,46 @@ export function toFront(placements: Placement[], id: string): Placement[] {
   const p = placements.find((x) => x.id === id);
   return p ? [...placements.filter((x) => x.id !== id), p] : placements;
 }
+
+// ---------- zoom ----------
+
+export const MAX_ZOOM = 4;
+/** A double tap on the paper goes between the whole page and this. */
+export const TAP_ZOOM = 2.5;
+
+export interface Fit {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale: number;
+}
+
+export interface Zoomed extends Fit {
+  zoom: number;
+}
+
+/**
+ * The page's frame at a zoom, inside the area it is shown in. A page no
+ * wider than the area stays centred; a bigger one can be pulled around,
+ * but never leaves a gap it could fill. `origin` is where the frame's
+ * top left corner is asked to be (area points); it is clamped.
+ */
+export function zoomedFrame(fit: Fit, area: { width: number; height: number }, zoom: number, origin: { x: number; y: number }): Zoomed {
+  const z = Math.min(MAX_ZOOM, Math.max(1, zoom));
+  const width = fit.width * z;
+  const height = fit.height * z;
+  const place = (want: number, size: number, room: number) => (size <= room + 0.5 ? (room - size) / 2 : Math.min(0, Math.max(room - size, want)));
+  return { x: place(origin.x, width, area.width), y: place(origin.y, height, area.height), width, height, scale: fit.scale * z, zoom: z };
+}
+
+/**
+ * Zoom so that the page point under `focal` (area points) stays under the
+ * finger. Returns the new frame (clamped like zoomedFrame).
+ */
+export function zoomAround(frame: Zoomed, fit: Fit, area: { width: number; height: number }, zoom: number, focal: { x: number; y: number }): Zoomed {
+  const z = Math.min(MAX_ZOOM, Math.max(1, zoom));
+  const page = viewToDisplay(frame, focal.x, focal.y);
+  const scale = fit.scale * z;
+  return zoomedFrame(fit, area, z, { x: focal.x - page.x * scale, y: focal.y - page.y * scale });
+}
