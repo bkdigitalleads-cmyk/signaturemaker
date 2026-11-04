@@ -103,7 +103,7 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
         const ask = purchaseReview({ onboarding, isPro: true, inTrial: await inFreeTrial() });
         if (ask) maybeRequestReview(ask);
       } else {
-        Alert.alert('Pro is on', `Every pen and font, initials, stamps and clean files.${reminded ? ' You will get a reminder the day before the trial ends.' : ''}`);
+        Alert.alert('Pro is on', `Every pen and font, initials, the date and text, and files with no mark.${reminded ? ' You will get a reminder the day before the trial ends.' : ''}`);
       }
     } else if (res.ok) {
       Alert.alert('Paid, but Pro is not showing', 'The App Store can lag a minute. Tap Restore purchases in a moment and it turns on.');
@@ -121,7 +121,7 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
     if (res.ok && res.isPro) {
       setIsPro(true);
       hidePaywall();
-      Alert.alert('Pro is back on', 'Every pen and font, initials, stamps and clean files.');
+      Alert.alert('Pro is back on', 'Every pen and font, initials, the date and text, and files with no mark.');
     } else if (res.ok) {
       Alert.alert('Nothing to restore', 'This Apple ID has no Signature Maker Pro purchase.');
     } else {
@@ -190,8 +190,8 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
                     ? `${p.product.priceString} a year${yearlyPerWeek ? `, ${yearlyPerWeek}` : ''}`
                     : t === 'LIFETIME'
                       ? `${p.product.priceString} once, yours to keep`
-                      : shownTrial
-                        ? `${shownTrial}, then ${p.product.priceString} a week`
+                      : weeklyTrial
+                        ? `${weeklyTrial}, then ${p.product.priceString} a week`
                         : `${p.product.priceString} a week`;
                 return (
                   <Tap
@@ -219,7 +219,7 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
         <View style={[styles.bottom, { borderTopColor: theme.edge, paddingBottom: Math.max(insets.bottom, space.m) }]}>
           {/* The button says Continue, never Subscribe. */}
           <InkButton theme={theme} label={purchasing ? 'One moment' : 'Continue'} onPress={buy} disabled={purchasing || !selected || loading} />
-          {selected && onboarding && trialLabel(selected, trialEligible) ? (
+          {selected && trialLabel(selected, trialEligible) ? (
             <View style={styles.checkLine}>
               <Glyph name="check" size={18} color={theme.ink} weight={2.2} />
               <Text style={[type.strong, { color: theme.ink }]}>No payment now</Text>

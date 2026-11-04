@@ -9,7 +9,7 @@ import { requestReminderPermission } from '../reminder';
 import { trialLength } from '../offer';
 import type { Need } from '../rules';
 import Glyph from '../ui/Glyph';
-import { InkButton, Panel, Tap } from '../ui/Kit';
+import { InkButton, Panel, Row, Tap } from '../ui/Kit';
 import { DrawShow, ExportShow, SignShow } from '../ui/Showcase';
 
 /**
@@ -152,7 +152,23 @@ export function TrialSteps({ onDone }: { onDone: () => void }) {
   }
 
   if (step === 'trial') {
-    return <Page theme={theme} title={`Try it free for ${offer.length}.`} line={`Then ${offer.then}. Cancel in Settings any time before it ends.`} button="Try it free" onPress={() => setStep('remind')} noPayment />;
+    return (
+      <Page
+        theme={theme}
+        title={`Try it free for ${offer.length}.`}
+        line={`Then ${offer.then}. Cancel in Settings any time before it ends.`}
+        button="Try it free"
+        onPress={() => setStep('remind')}
+        noPayment
+        visual={
+          <Panel theme={theme} style={{ alignSelf: 'stretch' }}>
+            <Row theme={theme} first glyph="check" label="Today" sub="Every pen and font, exports and signed documents with no mark." />
+            <Row theme={theme} glyph="date" label="The day before it ends" sub="One reminder, so nothing surprises you." />
+            <Row theme={theme} glyph="star" label={`After ${offer.length}`} sub={`${offer.then[0].toUpperCase()}${offer.then.slice(1)}. Cancel before then and pay nothing.`} />
+          </Panel>
+        }
+      />
+    );
   }
 
   return (

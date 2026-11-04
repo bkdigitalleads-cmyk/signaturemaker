@@ -1,4 +1,4 @@
-# Signature Maker, App Store metadata (1.0.0)
+# Signature Maker, App Store metadata (1.0.1)
 
 Everything here is pasted into App Store Connect by Brian and Cowork. No em dashes anywhere, no brand words (no other signing products or PDF software), no "Unlock", "Premium", "Seamless", "Effortless", "Welcome", "Let's", "Professional-grade" or exclamation marks.
 
@@ -63,6 +63,9 @@ Free: drawing, typing and saving as many signatures as you like, your library, a
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://bkdigitalleads-cmyk.github.io/signaturemaker/privacy.html
+
+## What's New (1.0.1)
+Pinch to zoom in on a page while signing, so a small signature line is easy to hit. Drag the paper to look around, double tap to zoom in or back out, and use the new smaller and bigger buttons to size a signature. Clearer wording on the export and trial screens.
 
 ## What's New (1.0.0)
 First version. Draw or type your signature, save it as a transparent PNG, and sign PDFs from Mail or Files on your iPhone.

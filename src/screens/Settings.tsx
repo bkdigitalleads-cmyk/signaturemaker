@@ -26,7 +26,7 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
     if (res.ok) cancelTrialReminder();
     if (res.ok && res.isPro) {
       setIsPro(true);
-      Alert.alert('Pro is back on', 'Every pen and font, initials, stamps and clean files.');
+      Alert.alert('Pro is back on', 'Every pen and font, initials, the date and text, and files with no mark.');
     } else if (res.ok) Alert.alert('Nothing to restore', 'This Apple ID has no Signature Maker Pro purchase.');
     else Alert.alert('Restore did not work', res.error ?? 'Try once more.');
   };
@@ -60,9 +60,9 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
         <Label theme={theme}>Pro</Label>
         <Panel theme={theme}>
           {isPro ? (
-            <Row theme={theme} first glyph="check" label="Signature Maker Pro is on" sub="Every pen and font, initials, stamps and clean files" />
+            <Row theme={theme} first glyph="check" label="Signature Maker Pro is on" sub="Every pen and font, initials, the date and text, files with no mark" />
           ) : (
-            <Row theme={theme} first glyph="star" label="Signature Maker Pro" sub="Every pen and font, initials, stamps and clean files" onPress={() => askPro('pro')} />
+            <Row theme={theme} first glyph="star" label="Signature Maker Pro" sub="Every pen and font, initials, the date and text, files with no mark" onPress={() => askPro('pro')} />
           )}
           <Row theme={theme} glyph="undo" label={restoring ? 'Restoring' : 'Restore purchases'} onPress={restore} right={<View />} />
         </Panel>
