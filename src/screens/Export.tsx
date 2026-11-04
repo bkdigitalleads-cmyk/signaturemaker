@@ -40,7 +40,11 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
 
   const mark: Mark = which === 'initials' && sig.initials ? sig.initials : sig.main;
   const opt = CHOICES.find((c) => c.id === choice)!;
-  const showMark = previewShowsMark(isPro, usage);
+  // Decided when the screen opens, so the preview does not switch to the marked
+  // version the moment the free first export is saved (that one was clean). Pro
+  // still takes the mark off at once.
+  const [markedAtOpen] = useState(() => previewShowsMark(isPro, usage));
+  const showMark = !isPro && markedAtOpen;
   const boxW = width - space.l * 2;
 
   // The preview is the real file at 2x, so what you see is what you get.
@@ -127,7 +131,7 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
         )}
         <Caption theme={theme}>
           {view === 'checker' && choice === 'transparent' ? 'The gray squares show where it is clear. On a page or in an email, only the ink shows.' : 'This is the file as it will be saved.'}
-          {showMark ? ' This export carries a small “Made with Signature Maker” mark. Pro removes it.' : ''}
+          {showMark ? ' Your free export is used, so this one carries a small “Made with Signature Maker” mark. Pro removes it.' : ''}
         </Caption>
 
         <View>

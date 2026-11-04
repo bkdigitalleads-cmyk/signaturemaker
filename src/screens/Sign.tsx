@@ -12,13 +12,17 @@ import {
   displaySize,
   fitRect,
   hitTest,
+  MAX_ZOOM,
   Placement,
   resizeBox,
   scaleBox,
   shortDate,
+  TAP_ZOOM,
   TEXT_SIZE_RATIO,
   toFront,
   viewToDisplay,
+  zoomAround,
+  zoomedFrame,
 } from '../placement';
 import { finishDocument, Finished, OpenDoc } from '../documents';
 import { shareUri } from '../exporting';
@@ -38,10 +42,13 @@ const pid = () => `p${Date.now().toString(36)}${(seq++).toString(36)}`;
 
 /**
  * Signing a document: the pages one at a time, filling the space; "Add
- * signature" puts the default (or the one picked) on the page. Drag to
- * move, pinch anywhere on the page to resize the selected one, or pull its
- * corner handle. Initials, the date and a line of text are Pro. "Done
- * signing" writes a new file; the original is never touched.
+ * signature" puts the default (or the one picked) on the page. Drag a
+ * placement to move it; pull its corner handle, or use the smaller and
+ * bigger buttons, to resize it. Pinch anywhere to zoom the page (up to
+ * 4x) so a small signature line is easy to hit, drag the paper to look
+ * around, double tap to go between the whole page and a close look.
+ * Initials, the date and a line of text are Pro. "Done signing" writes a
+ * new file; the original is never touched.
  */
 export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => void }) {
   const theme = useTheme();
@@ -51,6 +58,11 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [area, setArea] = useState({ width: 0, height: 0 });
+  // The page at a zoom: z is 1 (whole page) to MAX_ZOOM; origin is the frame's top left in the area.
+  const [zoom, setZoom] = useState({ z: 1, origin: { x: 0, y: 0 } });
+  // While two fingers are down: the page is scaled with a transform and the PDF is only
+  // re-drawn at the new size once they lift, so the pinch stays smooth.
+  const [live, setLive] = useState<{ k: number; tx: number; ty: number } | null>(null);
   const [picker, setPicker] = useState<'signature' | 'initials' | null>(null);
   const [creating, setCreating] = useState<null | { initialsFor?: Signature }>(null);
   const [askFormat, setAskFormat] = useState(false);
@@ -69,7 +81,9 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
 
   const box = doc.pages[page];
   const shown = displaySize(box);
-  const frame = fitRect(shown, { width: area.width, height: area.height });
+  const fit = fitRect(shown, { width: area.width, height: area.height });
+  const frame = zoomedFrame(fit, area, zoom.z, zoom.origin);
+  const fitPage = () => setZoom({ z: 1, origin: { x: 0, y: 0 } });
   const onPage = placements.filter((p) => p.page === page);
   const sel = placements.find((p) => p.id === selected) ?? null;
 
@@ -102,65 +116,125 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
   };
 
   // ---------- touch: one responder over the page ----------
-  const g = useRef<{ id: string | null; mode: 'move' | 'resize' | 'none'; start: Placement | null; x0: number; y0: number; pinch: number | null; pinchStart: Placement | null; moved: boolean }>({
+  // One finger on a placement moves it (its corner handle resizes it). One finger on
+  // the paper drags the view around when zoomed in. Two fingers zoom the page about
+  // the point between them. A double tap on the paper zooms in there, or back out.
+  interface Pinch {
+    d0: number;
+    /** The point between the fingers at the start, in the frame's own points. */
+    fx: number;
+    fy: number;
+    mx0: number;
+    my0: number;
+    mx: number;
+    my: number;
+    k: number;
+  }
+  const g = useRef<{ id: string | null; mode: 'move' | 'resize' | 'none'; start: Placement | null; x0: number; y0: number; moved: boolean; pinch: Pinch | null; pan: { x: number; y: number } | null; tapped: boolean }>({
     id: null,
     mode: 'none',
     start: null,
     x0: 0,
     y0: 0,
-    pinch: null,
-    pinchStart: null,
     moved: false,
+    pinch: null,
+    pan: null,
+    tapped: false,
   });
+  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
   const placementsRef = useRef(placements);
   placementsRef.current = placements;
   const selRef = useRef(selected);
   selRef.current = selected;
 
-  const dist = (e: GestureResponderEvent) => {
+  const startPinch = (e: GestureResponderEvent) => {
     const t = e.nativeEvent.touches;
-    if (t.length < 2) return null;
-    return Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
+    const mx0 = (t[0].pageX + t[1].pageX) / 2;
+    const my0 = (t[0].pageY + t[1].pageY) / 2;
+    g.current.pinch = { d0: Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY) || 1, fx: (t[0].locationX + t[1].locationX) / 2, fy: (t[0].locationY + t[1].locationY) / 2, mx0, my0, mx: mx0, my: my0, k: 1 };
+    g.current.id = null;
+    g.current.mode = 'none';
+    g.current.pan = null;
+  };
+
+  /** Two fingers lifted: draw the page at the new size, keeping the point between them where it is. */
+  const commitPinch = () => {
+    const p = g.current.pinch;
+    if (!p) return;
+    g.current.pinch = null;
+    const k = p.k;
+    const z = Math.min(MAX_ZOOM, Math.max(1, frame.zoom * k));
+    const under = viewToDisplay(frame, frame.x + p.fx, frame.y + p.fy);
+    const fxNow = frame.x + frame.width / 2 + (p.fx - frame.width / 2) * k + (p.mx - p.mx0);
+    const fyNow = frame.y + frame.height / 2 + (p.fy - frame.height / 2) * k + (p.my - p.my0);
+    const scale = fit.scale * z;
+    setZoom({ z, origin: { x: fxNow - under.x * scale, y: fyNow - under.y * scale } });
+    setLive(null);
   };
 
   const grant = (e: GestureResponderEvent) => {
     const n = e.nativeEvent;
+    g.current = { id: null, mode: 'none', start: null, x0: n.pageX, y0: n.pageY, moved: false, pinch: null, pan: null, tapped: false };
+    if (n.touches.length >= 2) return startPinch(e);
     const pt = viewToDisplay({ x: 0, y: 0, scale: frame.scale }, n.locationX, n.locationY);
     const hit = hitTest(placementsRef.current, page, pt.x, pt.y, { selectedId: selRef.current, handle: 22 / frame.scale, slop: 8 / frame.scale });
-    const cur = hit ? placementsRef.current.find((p) => p.id === hit.id)! : placementsRef.current.find((p) => p.id === selRef.current && p.page === page) ?? null;
-    g.current = { id: cur?.id ?? null, mode: hit ? hit.mode : 'none', start: cur, x0: n.pageX, y0: n.pageY, pinch: dist(e), pinchStart: cur, moved: false };
     if (hit) {
+      lastTap.current = null;
+      const cur = placementsRef.current.find((p) => p.id === hit.id)!;
+      g.current.id = cur.id;
+      g.current.mode = hit.mode;
+      g.current.start = cur;
       setSelected(hit.id);
       setPlacements((all) => toFront(all, hit.id));
+      return;
     }
+    // On the paper: a second tap within a moment zooms in here, or back out to the whole page.
+    const now = Date.now();
+    const last = lastTap.current;
+    if (last && now - last.t < 320 && Math.hypot(n.pageX - last.x, n.pageY - last.y) < 24) {
+      lastTap.current = null;
+      const focal = { x: frame.x + n.locationX, y: frame.y + n.locationY };
+      const next = zoomAround(frame, fit, area, frame.zoom > 1 ? 1 : TAP_ZOOM, focal);
+      setZoom({ z: next.zoom, origin: { x: next.x, y: next.y } });
+      tick();
+      g.current.tapped = true;
+      return;
+    }
+    lastTap.current = { t: now, x: n.pageX, y: n.pageY };
+    if (frame.zoom > 1) g.current.pan = { x: frame.x, y: frame.y };
   };
 
   const move = (e: GestureResponderEvent) => {
     const s = g.current;
-    if (!s.id) return;
-    const d = dist(e);
-    if (d != null) {
-      // Two fingers anywhere on the page: pinch the selected one.
-      if (s.pinch == null) {
-        s.pinch = d;
-        s.pinchStart = placementsRef.current.find((p) => p.id === s.id) ?? s.start;
-      }
-      const k = d / s.pinch;
-      if (s.pinchStart) update(s.id, () => clampBox(scaleBox(s.pinchStart!, k), shown));
+    const t = e.nativeEvent.touches;
+    if (t.length >= 2) {
+      if (!s.pinch) startPinch(e);
+      const p = s.pinch!;
+      const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
+      p.mx = (t[0].pageX + t[1].pageX) / 2;
+      p.my = (t[0].pageY + t[1].pageY) / 2;
+      p.k = Math.min(MAX_ZOOM, Math.max(1, frame.zoom * (d / p.d0))) / frame.zoom;
+      setLive({ k: p.k, tx: (p.fx - frame.width / 2) * (1 - p.k) + (p.mx - p.mx0), ty: (p.fy - frame.height / 2) * (1 - p.k) + (p.my - p.my0) });
       s.moved = true;
       return;
     }
-    if (s.pinch != null) {
-      // Back to one finger after a pinch: carry on from here.
-      s.pinch = null;
-      s.start = placementsRef.current.find((p) => p.id === s.id) ?? s.start;
-      s.x0 = e.nativeEvent.pageX;
-      s.y0 = e.nativeEvent.pageY;
-      if (s.mode === 'none') s.mode = 'move';
+    if (s.pinch) {
+      // One finger lifted after a pinch: settle the zoom and let the rest of this touch go.
+      commitPinch();
+      s.moved = true;
+      return;
     }
-    if (!s.start || s.mode === 'none') return;
-    const dx = (e.nativeEvent.pageX - s.x0) / frame.scale;
-    const dy = (e.nativeEvent.pageY - s.y0) / frame.scale;
+    const dxView = e.nativeEvent.pageX - s.x0;
+    const dyView = e.nativeEvent.pageY - s.y0;
+    if (s.pan) {
+      if (Math.abs(dxView) + Math.abs(dyView) > 1) s.moved = true;
+      const pan = s.pan;
+      setZoom((zm) => ({ ...zm, origin: { x: pan.x + dxView, y: pan.y + dyView } }));
+      return;
+    }
+    if (!s.id || !s.start || s.mode === 'none') return;
+    const dx = dxView / frame.scale;
+    const dy = dyView / frame.scale;
     if (Math.abs(dx) + Math.abs(dy) > 1) s.moved = true;
     const st = s.start;
     update(s.id, () => clampBox(s.mode === 'resize' ? resizeBox(st, dx, dy) : { ...st, x: st.x + dx, y: st.y + dy }, shown));
@@ -168,9 +242,10 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
 
   const release = () => {
     const s = g.current;
-    if (s.mode === 'none' && !s.moved) setSelected(null);
-    else if (s.moved) placeHaptic();
-    g.current = { ...s, id: null, mode: 'none', pinch: null };
+    if (s.pinch) commitPinch();
+    else if (s.mode === 'none' && !s.moved && !s.tapped) setSelected(null);
+    else if (s.moved && s.id) placeHaptic();
+    g.current = { ...s, id: null, mode: 'none', pinch: null, pan: null };
   };
 
   // ---------- done ----------
@@ -231,7 +306,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
       />
       <View style={styles.area} onLayout={(e) => setArea({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}>
         {frame.width > 0 ? (
-          <View style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}>
+          <View style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height, transform: live ? [{ translateX: live.tx }, { translateY: live.ty }, { scale: live.k }] : undefined }}>
             <View style={[styles.sheet, { borderColor: theme.edge }]}>
               <PageView doc={doc} page={page} width={frame.width} height={frame.height} />
             </View>
@@ -255,6 +330,13 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
             />
           </View>
         ) : null}
+        {frame.zoom > 1 && !live ? (
+          <Tap onPress={() => { tick(); fitPage(); }} style={[styles.fitBtn, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="button" accessibilityLabel="Show the whole page" accessibilityHint="Pinch or double tap the page to zoom in again">
+            <Text style={[type.small, { color: theme.ink }]} maxFontSizeMultiplier={1.3}>
+              Whole page
+            </Text>
+          </Tap>
+        ) : null}
       </View>
 
       <View style={[styles.bottom, { borderTopColor: theme.edge, paddingBottom: Math.max(insets.bottom, space.m) }]}>
@@ -270,8 +352,14 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
         <View style={styles.doneRow}>
           {doc.pages.length > 1 ? (
             <View style={styles.pager}>
-              <GlyphButton theme={theme} glyph="back" label="Previous page" onPress={() => { tick(); setSelected(null); setPage(Math.max(0, page - 1)); }} disabled={page === 0} filled />
-              <GlyphButton theme={theme} glyph="chevron" label="Next page" onPress={() => { tick(); setSelected(null); setPage(Math.min(doc.pages.length - 1, page + 1)); }} disabled={page === doc.pages.length - 1} filled />
+              <GlyphButton theme={theme} glyph="back" label="Previous page" onPress={() => { tick(); setSelected(null); fitPage(); setPage(Math.max(0, page - 1)); }} disabled={page === 0} filled />
+              <GlyphButton theme={theme} glyph="chevron" label="Next page" onPress={() => { tick(); setSelected(null); fitPage(); setPage(Math.min(doc.pages.length - 1, page + 1)); }} disabled={page === doc.pages.length - 1} filled />
+            </View>
+          ) : null}
+          {sel ? (
+            <View style={styles.pager}>
+              <GlyphButton theme={theme} glyph="minus" label={`Make the ${sel.kind} smaller`} filled onPress={() => { tick(); update(sel.id, (x) => clampBox(scaleBox(x, 1 / 1.15), shown)); }} />
+              <GlyphButton theme={theme} glyph="plus" label={`Make the ${sel.kind} bigger`} filled onPress={() => { tick(); update(sel.id, (x) => clampBox(scaleBox(x, 1.15), shown)); }} />
             </View>
           ) : null}
           {sel ? (
@@ -389,7 +477,7 @@ function Placed({ theme, p, scale, selected, library, onAction }: { theme: Theme
       style={{ position: 'absolute', left: p.x * scale, top: p.y * scale, width: w, height: h }}
       accessible
       accessibilityLabel={label}
-      accessibilityHint="Drag to move. Pinch to resize."
+      accessibilityHint="Drag to move. Pull the corner to resize, or use the smaller and bigger buttons."
       accessibilityActions={[{ name: 'bigger', label: 'Make bigger' }, { name: 'smaller', label: 'Make smaller' }, { name: 'delete', label: 'Remove' }]}
       onAccessibilityAction={(e) => onAction(e.nativeEvent.actionName as 'bigger' | 'smaller' | 'delete')}
     >
@@ -480,7 +568,8 @@ function Signed({
 }
 
 const styles = StyleSheet.create({
-  area: { flex: 1, marginHorizontal: space.l, marginVertical: space.s },
+  area: { flex: 1, marginHorizontal: space.l, marginVertical: space.s, overflow: 'hidden' },
+  fitBtn: { position: 'absolute', top: space.s, right: space.s, paddingHorizontal: space.m, paddingVertical: space.xs + 2, borderRadius: radius.round, borderWidth: 1 },
   sheet: { borderWidth: 1, borderRadius: 2, overflow: 'hidden' },
   bottom: { borderTopWidth: 1, paddingTop: space.m, paddingHorizontal: space.l, gap: space.m },
   tools: { flexDirection: 'row', gap: space.s },
