@@ -37,12 +37,13 @@ export async function artPath(art: Art): Promise<{ path: SkPath; bounds: Rect } 
   if (art.kind === 'drawn') {
     const bounds = strokesBounds(art.strokes);
     if (!bounds) return null;
-    const path = Skia.Path.Make();
+    // Skia 2.14 paths are immutable; strokes are joined through a builder.
+    const builder = Skia.PathBuilder.Make();
     for (const s of art.strokes) {
       const p = Skia.Path.MakeFromSVGString(strokePath(s));
-      if (p) path.addPath(p);
+      if (p) builder.addPath(p);
     }
-    return { path, bounds };
+    return { path: builder.detach(), bounds };
   }
   const text = art.text.trim();
   if (!text) return null;

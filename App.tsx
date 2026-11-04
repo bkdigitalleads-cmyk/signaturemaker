@@ -186,16 +186,43 @@ function Shell() {
   );
 }
 
+/** A failure while a screen renders: shown instead of a frozen desk. Nothing is lost on disk. */
+class Guard extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#F4F1EA', padding: space.l, paddingTop: 80 }}>
+        <Text style={[type.title, { color: '#1A1917' }]}>Something went wrong on this screen.</Text>
+        <Text style={[type.body, { color: '#1A1917', marginTop: space.s }]}>Close the app and open it again. Your signatures and documents are saved.</Text>
+        <Text style={{ fontSize: 12, color: '#8A867F', marginTop: space.l }}>{error.message}</Text>
+      </View>
+    );
+  }
+}
+
 export default function App() {
   const theme = useTheme();
   const [fontsLoaded, fontError] = useFonts({ ...UI_FONT_FILES, ...SCRIPT_FONT_FILES });
+  // If the fonts are still not in after a few seconds, open anyway with the system font.
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setGaveUp(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
   // The desk's colour while fonts load, so launch never flashes white.
-  if (!fontsLoaded && !fontError) return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
+  if (!fontsLoaded && !fontError && !gaveUp) return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
   return (
-    <SafeAreaProvider>
-      <AppProvider>
-        <Shell />
-      </AppProvider>
-    </SafeAreaProvider>
+    <Guard>
+      <SafeAreaProvider>
+        <AppProvider>
+          <Shell />
+        </AppProvider>
+      </SafeAreaProvider>
+    </Guard>
   );
 }
