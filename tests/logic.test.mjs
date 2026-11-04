@@ -624,7 +624,7 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.equal(app.name, 'Signature Maker');
   assert.equal(app.slug, 'signaturemaker');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.signaturemaker');
-  assert.equal(app.version, '1.0.0');
+  assert.equal(app.version, '1.0.1');
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.plugins[app.plugins.length - 1], './plugins/withoutPushEntitlement');
   const types = app.ios.infoPlist.CFBundleDocumentTypes.flatMap((t) => t.LSItemContentTypes);
@@ -678,4 +678,35 @@ test('copy: no em dashes, banned words or brand names in the app, the website or
     const strings = readFileSync(f, 'utf8').match(/'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|>[^<>{}\n]+</g) ?? [];
     for (const t of strings) assert.ok(!/[A-Za-z]!(\s|$|['"`<])/.test(t), `exclamation in ${f}: ${t}`);
   }
+});
+
+test('zoom: the page stays centred at 1x, can be pulled around when bigger than the area, and a focal point stays put', () => {
+  const area = { width: 361, height: 520 };
+  const fit = P.fitRect({ width: 612, height: 792 }, area);
+  const one = P.zoomedFrame(fit, area, 1, { x: -500, y: -500 });
+  close(one.x, fit.x);
+  close(one.y, fit.y);
+  close(one.scale, fit.scale);
+  const two = P.zoomedFrame(fit, area, 2, { x: -100, y: -100 });
+  close(two.width, fit.width * 2);
+  close(two.x, -100);
+  close(two.y, -100);
+  // Never a gap: pulled too far, it stops at the edge.
+  const far = P.zoomedFrame(fit, area, 2, { x: 50, y: -9999 });
+  close(far.x, 0);
+  close(far.y, area.height - fit.height * 2);
+  // Zoom is capped.
+  assert.equal(P.zoomedFrame(fit, area, 9, { x: 0, y: 0 }).zoom, P.MAX_ZOOM);
+  assert.equal(P.zoomedFrame(fit, area, 0.2, { x: 0, y: 0 }).zoom, 1);
+  // Zooming around a point keeps that page point under the finger.
+  const focal = { x: 200, y: 300 };
+  const before = P.viewToDisplay(one, focal.x, focal.y);
+  const z = P.zoomAround(one, fit, area, 3, focal);
+  const after = P.viewToDisplay(z, focal.x, focal.y);
+  close(after.x, before.x);
+  close(after.y, before.y);
+  // Back to 1x from anywhere: centred again.
+  const back = P.zoomAround(z, fit, area, 1, { x: 10, y: 10 });
+  close(back.x, fit.x);
+  close(back.y, fit.y);
 });
