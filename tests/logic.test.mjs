@@ -625,6 +625,8 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.equal(app.slug, 'signaturemaker');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.signaturemaker');
   assert.equal(app.version, '1.0.1');
+  assert.equal(app.ios.buildNumber, "4");
+  assert.equal(JSON.parse(readFileSync(`${ROOT}package.json`, "utf8")).version, app.version);
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.plugins[app.plugins.length - 1], './plugins/withoutPushEntitlement');
   const types = app.ios.infoPlist.CFBundleDocumentTypes.flatMap((t) => t.LSItemContentTypes);
@@ -709,4 +711,164 @@ test('zoom: the page stays centred at 1x, can be pulled around when bigger than 
   const back = P.zoomAround(z, fit, area, 1, { x: 10, y: 10 });
   close(back.x, fit.x);
   close(back.y, fit.y);
+});
+
+// ---------- 1.0.1 build 4: zoom without the jump, stamps in view, remembered sizes ----------
+
+test('zoom: the page is drawn once at the top zoom and only scaled, with no new size for the PDF view', () => {
+  assert.ok(P.RENDER_ZOOM >= P.MAX_ZOOM);
+  const pv = readFileSync(`${ROOT}src/ui/PageView.tsx`, 'utf8');
+  assert.match(pv, /width: rw, height: rh/);
+  assert.match(pv, /\{ scale: s \}/);
+  assert.match(pv, /pointerEvents="none"/);
+  const sign = readFileSync(`${ROOT}src/screens/Sign.tsx`, 'utf8');
+  assert.match(sign, /<PageView doc=\{doc\} page=\{page\} width=\{fit\.width\} height=\{fit\.height\} zoom=\{frame\.zoom\} renderZoom=\{RENDER_ZOOM\} \/>/);
+});
+
+test('live pinch: kept centred when smaller than the area, no gap when bigger, and capped at MAX_ZOOM', () => {
+  const area = { width: 361, height: 520 };
+  const fit = P.fitRect({ width: 612, height: 792 }, area);
+  const one = P.zoomedFrame(fit, area, 1, { x: 0, y: 0 });
+  // Where the live transform puts the frame's top left corner (scaled about the centre).
+  const corner = (f, k, c) => ({ x: f.x + c.tx + (f.width * (1 - k)) / 2, y: f.y + c.ty + (f.height * (1 - k)) / 2 });
+  // Smaller than the area across (1x, dragged sideways): stays centred across.
+  const small = P.clampLive(one, fit, area, 1, 80, 0);
+  close(corner(one, 1, small).x, fit.x);
+  // Bigger than the area (2x), pulled far down and right: no gap at the top or the left.
+  const k2 = 2;
+  const big = P.clampLive(one, fit, area, k2, 9999, 9999);
+  close(corner(one, k2, big).x, 0);
+  close(corner(one, k2, big).y, 0);
+  // And pulled far the other way: no gap at the bottom or the right.
+  const back = P.clampLive(one, fit, area, k2, -9999, -9999);
+  close(corner(one, k2, back).x, area.width - fit.width * 2);
+  close(corner(one, k2, back).y, area.height - fit.height * 2);
+  // Inside the room it is left alone.
+  const free = P.clampLive(one, fit, area, k2, -20, -30);
+  const want = corner(one, k2, { tx: -20, ty: -30 });
+  assert.ok(want.x <= 0 && want.x >= area.width - fit.width * 2);
+  close(free.tx, -20);
+  close(free.ty, -30);
+  // At MAX_ZOOM, from a frame already at 3x: an over-pinch is treated as MAX_ZOOM.
+  const three = P.zoomedFrame(fit, area, 3, { x: -200, y: -300 });
+  const kMax = P.MAX_ZOOM / 3;
+  const atMax = P.clampLive(three, fit, area, 10, 9999, -9999);
+  const same = P.clampLive(three, fit, area, kMax, 9999, -9999);
+  close(atMax.tx, same.tx);
+  close(atMax.ty, same.ty);
+  const c = corner(three, kMax, atMax);
+  close(c.x, 0);
+  close(c.y, area.height - fit.height * P.MAX_ZOOM);
+  // Lifting the fingers settles exactly where the live transform showed the page.
+  const settled = P.liveToFrame(three, fit, area, kMax, atMax.tx, atMax.ty);
+  close(settled.zoom, P.MAX_ZOOM);
+  close(settled.x, c.x);
+  close(settled.y, c.y);
+  const mid = P.clampLive(one, fit, area, 2.5, -100, -150);
+  const m = P.liveToFrame(one, fit, area, 2.5, mid.tx, mid.ty);
+  const mc = corner(one, 2.5, mid);
+  close(m.x, mc.x);
+  close(m.y, mc.y);
+});
+
+test('new stamps: smaller defaults; centred on what is on screen; at 1x the old lower-third spot; a second one goes lower', () => {
+  const page = { width: 612, height: 792 };
+  assert.deepEqual(P.STAMP_WIDTH, { signature: 0.26, initials: 0.1, date: 0.16, text: 0.24 });
+  close(P.stampSize(page, 4, 'signature').width, 612 * 0.26);
+  // The max-height rule stays for the defaults.
+  close(P.stampSize(page, 1, 'signature').height, 79.2);
+  close(P.stampSize(page, 1, 'date').height, 792 * 0.04);
+  const area = { width: 361, height: 520 };
+  const fit = P.fitRect(page, area);
+  // At 1x the whole page is on screen and the stamp lands where defaultBox puts it.
+  const whole = P.visiblePart(P.zoomedFrame(fit, area, 1, { x: 0, y: 0 }), area, page);
+  close(whole.width, 612, 1e-6);
+  close(whole.height, 792, 1e-6);
+  for (const kind of ['signature', 'initials', 'date', 'text']) {
+    const a = P.placeInView(page, whole, 3, kind);
+    const d = P.defaultBox(page, 3, kind);
+    assert.deepEqual([a.x, a.y, a.width, a.height].map((v) => +v.toFixed(6)), [d.x, d.y, d.width, d.height].map((v) => +v.toFixed(6)), kind);
+  }
+  // Zoomed to 3x on the bottom left: the visible part is that corner, and the stamp is in its middle.
+  const z = P.zoomedFrame(fit, area, 3, { x: 0, y: area.height - fit.height * 3 });
+  const vis = P.visiblePart(z, area, page);
+  close(vis.x, 0);
+  close(vis.y + vis.height, 792, 1e-6);
+  close(vis.width, area.width / z.scale);
+  const b = P.placeInView(page, vis, 5, 'date');
+  close(b.x + b.width / 2, vis.x + vis.width / 2);
+  close(b.y + b.height / 2, vis.y + vis.height / 2);
+  // Every corner of it is on screen.
+  for (const [x, y] of [[b.x, b.y], [b.x + b.width, b.y + b.height]]) {
+    const vx = z.x + x * z.scale;
+    const vy = z.y + y * z.scale;
+    assert.ok(vx >= 0 && vx <= area.width && vy >= 0 && vy <= area.height);
+  }
+  // Near the page's edge it is kept on the page.
+  const edge = P.placeInView(page, { x: 590, y: 770, width: 22, height: 22 }, 3, 'signature');
+  assert.ok(edge.x + edge.width <= 612 + 1e-9 && edge.y + edge.height <= 792 + 1e-9);
+  // A second one on the spot lands a little lower; one somewhere else does not move it.
+  const n = P.nudge(b, [b], page);
+  close(n.y, b.y + 23.76);
+  close(n.x, b.x);
+  assert.equal(P.nudge(b, [{ x: 0, y: 0, width: 10, height: 10 }], page).y, b.y);
+  // Nothing of the page on screen: the whole page.
+  assert.deepEqual(P.visiblePart({ x: 900, y: 0, width: 100, height: 100, scale: 1 }, area, page), { x: 0, y: 0, width: 612, height: 792 });
+});
+
+test('remembered size: a resize sets the next stamp of that kind; bad stored values are dropped', () => {
+  const page = { width: 612, height: 792 };
+  let w = P.rememberWidth({}, 'signature', 122.4, 612);
+  close(w.signature, 0.2);
+  w = P.rememberWidth(w, 'date', 61.2, 612);
+  close(w.date, 0.1);
+  close(w.signature, 0.2);
+  // The next signature starts at a fifth of the page, on any page size.
+  close(P.placeInView(page, { x: 0, y: 0, width: 612, height: 792 }, 3, 'signature', w.signature).width, 122.4);
+  close(P.stampSize({ width: 842, height: 595 }, 3, 'signature', w.signature).width, 168.4);
+  // Initials have none yet: the default.
+  close(P.stampSize(page, 3, 'initials', w.initials).width, 61.2);
+  // Nonsense is ignored.
+  assert.equal(P.rememberWidth(w, 'text', 50, 0), w);
+  assert.equal(P.rememberWidth(w, 'text', 0, 612), w);
+  assert.deepEqual(P.cleanWidths({ signature: 0.2, date: 'x', text: 7, initials: -1, other: 0.3 }), { signature: 0.2 });
+  assert.deepEqual(P.cleanWidths(null), {});
+  assert.deepEqual(P.cleanWidths('0.2'), {});
+  // Stored as one new pref key; older prefs without it still parse.
+  const state = readFileSync(`${ROOT}src/state.tsx`, 'utf8');
+  assert.match(state, /lastWidth: cleanWidths\(raw\.lastWidth\)/);
+  assert.match(state, /lastWidth: \{\} \}/);
+  // Set when a resize ends: the corner handle's release and the minus and plus steps.
+  const sign = readFileSync(`${ROOT}src/screens/Sign.tsx`, 'utf8');
+  assert.match(sign, /s\.mode === 'resize' && s\.last\) remember\(s\.last\)/);
+  assert.match(sign, /const step = [\s\S]{0,160}remember\(next\)/);
+  assert.match(sign, /prefs\.lastWidth\[kind\]/);
+});
+
+test('editing pill: above the selection, below near the top or under Whole page, inside the area, gone off screen', () => {
+  const area = { width: 361, height: 520 };
+  const pill = { width: 148, height: 52 };
+  const a = P.pillSpot({ x: 100, y: 300, width: 120, height: 40 }, area, pill, null);
+  close(a.y, 300 - 8 - 52);
+  close(a.x + pill.width / 2, 160);
+  // Near the top: below, past the handle.
+  const b = P.pillSpot({ x: 100, y: 20, width: 120, height: 40 }, area, pill, null);
+  close(b.y, 20 + 40 + 11 + 8);
+  // Near the right edge: kept inside.
+  const c = P.pillSpot({ x: 330, y: 300, width: 60, height: 20 }, area, pill, null);
+  close(c.x, area.width - pill.width - 8);
+  // Would sit under the Whole page pill: goes below instead.
+  const fit = { x: 240, y: 8, width: 113, height: 30 };
+  const d = P.pillSpot({ x: 240, y: 70, width: 100, height: 30 }, area, pill, fit);
+  close(d.y, 70 + 30 + 11 + 8);
+  // With room above and clear of it: above as usual.
+  close(P.pillSpot({ x: 240, y: 100, width: 100, height: 30 }, area, pill, fit).y, 40);
+  assert.equal(P.pillSpot({ x: 400, y: 100, width: 50, height: 20 }, area, pill, null), null);
+  // The bottom bar is the pager and a full Done signing: the three buttons are only in the pill.
+  const sign = readFileSync(`${ROOT}src/screens/Sign.tsx`, 'utf8');
+  const bar = sign.slice(sign.indexOf('styles.doneRow'), sign.indexOf('label="Done signing"'));
+  assert.ok(!/minus|plus|trash/.test(bar), 'editing buttons in the bottom bar');
+  const pillSrc = sign.slice(sign.indexOf('function EditPill'), sign.indexOf('function Tool'));
+  for (const label of ['Make the ${p.kind} smaller', 'Make the ${p.kind} bigger', 'Remove the selected ${p.kind}']) assert.ok(pillSrc.includes(label), label);
+  assert.match(sign, /sel && sel\.page === page && !live \? <EditPill/);
 });

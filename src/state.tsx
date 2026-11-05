@@ -10,6 +10,7 @@ import type { PaywallReason, Usage } from './gates';
 import type { InkId } from './library';
 import type { PenId, SizeStep } from './stroke';
 import type { Need } from './rules';
+import { cleanWidths, LastWidths } from './placement';
 
 export interface Prefs {
   pen: PenId;
@@ -20,9 +21,11 @@ export interface Prefs {
   typedName: string;
   /** "What do you need today?" from onboarding. Only picks the first screen. */
   need: Need | null;
+  /** The width last settled on for each kind of stamp, as a share of the page width (pref.lastWidth, new in 1.0.1 build 4). */
+  lastWidth: LastWidths;
 }
 
-export const DEFAULT_PREFS: Prefs = { pen: 'ink', ink: 'black', size: 1, fontId: 'dancing', typedName: '', need: null };
+export const DEFAULT_PREFS: Prefs = { pen: 'ink', ink: 'black', size: 1, fontId: 'dancing', typedName: '', need: null, lastWidth: {} };
 
 const PREF_PREFIX = 'pref.';
 export const ONBOARDED_KEY = 'flag.onboarded';
@@ -48,6 +51,7 @@ export function parsePrefs(rows: Record<string, string>): Prefs {
     fontId: typeof raw.fontId === 'string' ? raw.fontId : DEFAULT_PREFS.fontId,
     typedName: typeof raw.typedName === 'string' ? raw.typedName.slice(0, 60) : '',
     need: pick(raw.need, ['document', 'image', 'both', null] as const, null),
+    lastWidth: cleanWidths(raw.lastWidth),
   };
 }
 
