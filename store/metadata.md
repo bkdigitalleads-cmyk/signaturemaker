@@ -1,4 +1,4 @@
-# Signature Maker, App Store metadata (1.0.1)
+# Signature Maker, App Store metadata (1.0.2)
 
 Everything here is pasted into App Store Connect by Brian and Cowork. No em dashes anywhere, no brand words (no other signing products or PDF software), no "Unlock", "Premium", "Seamless", "Effortless", "Welcome", "Let's", "Professional-grade" or exclamation marks.
 
@@ -14,10 +14,24 @@ Sign Documents & PDF Maker
 
 "Signature maker" still indexes across the name and the subtitle (Apple combines their words), and "sign documents" and "sign pdf" stay exact phrases.
 
-## Keywords (100/100)
-esign,esignature,draw,handwritten,autograph,initials,fill,forms,contract,png,transparent,generator,e
+## Keywords, English (U.S.) (98/100)
+esign,e,fill,form,filler,signer,editor,generator,now,draw,initials,contract,autograph,png,doc,word
 
-Rule: no word from the name or subtitle (electronic, signature, creator, sign, documents, pdf, maker), no brand names. Apple combines words across the name, subtitle and keywords, so "signature maker", "sign pdf", "draw signature", "transparent signature png", "signature generator", "fill forms" and "e signature" are covered without repeating a word. The last keyword, "e", is as briefed (it pairs with "signature" for "e signature"). Counted with node: 100 characters exactly.
+New in 1.0.2, as briefed by Brian (Nov 17). Rule: no word from the name or subtitle (electronic, signature, creator, sign, documents, pdf, maker), no repeats. Apple combines words across the name, subtitle and keywords, so "e signature", "signature maker", "sign pdf", "fill form", "form filler", "pdf editor", "signature generator", "sign now", "draw signature" and "sign doc" are covered without repeating a word. Counted with node: 98 characters, 16 words.
+
+1.0.0 and 1.0.1 used: esign,esignature,draw,handwritten,autograph,initials,fill,forms,contract,png,transparent,generator,e (100). "esignature", "handwritten" and "transparent" moved to the Spanish (Mexico) keywords below.
+
+## Spanish (Mexico) locale (new in 1.0.2)
+Apple also indexes the Spanish (Mexico) locale's name, subtitle and keywords for searches on the U.S. App Store, so this locale carries a second set of English keywords. Add the locale in App Store Connect and fill these three fields; the description, promotional text, What's New and screenshots can be copied from English (U.S.).
+
+Name (28/30): Electronic Signature Creator
+
+Subtitle (26/30): Sign Documents & PDF Maker
+
+Keywords (95/100):
+esignature,handwritten,transparent,stamp,name,cursive,docs,agreement,lease,invoice,digital,scan
+
+Same rule as English: no word from the name or subtitle, no repeats within the locale. Counted with node: 95 characters, 12 words.
 
 Research behind them (Nov 2, ASOMobile Apple search popularity, iTunes top 10, AppMagic revenue): "signature maker" 40, "sign documents" 38, "electronic signature" 34, "signature creator" 32, "sign pdf" 27. Eight of the top ten on "signature maker" have under 100 ratings; a 90-day-old app with 0 ratings is first on "electronic signature" and "signature creator"; apps under 5,000 downloads show $5K to $10K revenue bands.
 
@@ -63,6 +77,9 @@ Free: drawing, typing and saving as many signatures as you like, your library, a
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://bkdigitalleads-cmyk.github.io/signaturemaker/privacy.html
+
+## What's New (1.0.2)
+Small fixes and improvements.
 
 ## What's New (1.0.1)
 Pinch to zoom in on a page while signing, so a small signature line is easy to hit. Drag the paper to look around, double tap to zoom in or back out, and use the new smaller and bigger buttons to size a signature. Clearer wording on the export and trial screens.

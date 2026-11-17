@@ -624,8 +624,8 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.equal(app.name, 'Signature Maker');
   assert.equal(app.slug, 'signaturemaker');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.signaturemaker');
-  assert.equal(app.version, '1.0.1');
-  assert.equal(app.ios.buildNumber, "4");
+  assert.equal(app.version, '1.0.2');
+  assert.equal(app.ios.buildNumber, "5");
   assert.equal(JSON.parse(readFileSync(`${ROOT}package.json`, "utf8")).version, app.version);
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.plugins[app.plugins.length - 1], './plugins/withoutPushEntitlement');
