@@ -19,21 +19,21 @@ esign,e,fill,form,filler,signer,editor,generator,now,draw,initials,contract,auto
 
 New in 1.0.2, as briefed by Brian (Nov 17). Rule: no word from the name or subtitle (electronic, signature, creator, sign, documents, pdf, maker), no repeats. Apple combines words across the name, subtitle and keywords, so "e signature", "signature maker", "sign pdf", "fill form", "form filler", "pdf editor", "signature generator", "sign now", "draw signature" and "sign doc" are covered without repeating a word. Counted with node: 98 characters, 16 words.
 
-1.0.0 and 1.0.1 used: esign,esignature,draw,handwritten,autograph,initials,fill,forms,contract,png,transparent,generator,e (100). "esignature", "handwritten" and "transparent" moved to the Spanish (Mexico) keywords below.
-
-## Spanish (Mexico) locale (new in 1.0.2)
-Apple also indexes the Spanish (Mexico) locale's name, subtitle and keywords for searches on the U.S. App Store, so this locale carries a second set of English keywords. Add the locale in App Store Connect and fill these three fields; the description, promotional text, What's New and screenshots can be copied from English (U.S.).
-
-Name (28/30): Electronic Signature Creator
-
-Subtitle (26/30): Sign Documents & PDF Maker
-
-Keywords (95/100):
-esignature,handwritten,transparent,stamp,name,cursive,docs,agreement,lease,invoice,digital,scan
-
-Same rule as English: no word from the name or subtitle, no repeats within the locale. Counted with node: 95 characters, 12 words.
+1.0.0 and 1.0.1 used: esign,esignature,draw,handwritten,autograph,initials,fill,forms,contract,png,transparent,generator,e (100). "handwritten" moved to the Spanish (Mexico) keywords below.
 
 Research behind them (Nov 2, ASOMobile Apple search popularity, iTunes top 10, AppMagic revenue): "signature maker" 40, "sign documents" 38, "electronic signature" 34, "signature creator" 32, "sign pdf" 27. Eight of the top ten on "signature maker" have under 100 ratings; a 90-day-old app with 0 ratings is first on "electronic signature" and "signature creator"; apps under 5,000 downloads show $5K to $10K revenue bands.
+
+## Spanish (Mexico) locale (new in 1.0.2)
+Apple also indexes the Spanish (Mexico) locale's name, subtitle and keywords for searches on the U.S. App Store, so this locale carries a second set of English words. "Electronic Signature Creator" is taken in that storefront, so the locale has its own name. These are the values in App Store Connect (Nov 17); the description, promotional text, What's New and screenshots are copied from English (U.S.).
+
+Name (30/30): Signature Maker: Sign PDF Docs
+
+Subtitle (30/30): eSign, Fill Forms & PDF Filler
+
+Keywords (97/100):
+editor,signer,document,electronic,creator,generator,form,e,now,contract,handwritten,stamp,digital
+
+Same rule as English: no word from this locale's name or subtitle, no repeats within the locale. Counted with node: 97 characters, 13 words. "editor" stays on purpose: adding text, dates and signatures to a PDF is the kind of editing these searches mean. The app has no camera, so there is no "scan".
 
 ## Promotional text (148/170)
 Sign the PDF in your inbox from your iPhone. Draw or type your signature once, save it as a transparent PNG, and use it on any document. No account.
@@ -94,7 +94,7 @@ Primary: Productivity. Secondary: Business.
 4+. Every content question is None: no user-generated content shared with others, no web browsing, no medical information, no gambling, no contests.
 
 ## App Privacy (nutrition label)
-Data Not Collected. Signatures and documents stay in the app's storage on the device and are never uploaded; there is no account and no analytics. RevenueCat validates purchases with an anonymous app user id and purchase history; answer the purchase questions the same way as for Migraine Log, Image to Text, Pumping and Odo.
+Purchases (Purchase History), used for App Functionality, not linked to the user's identity, not used for tracking. This is the label in App Store Connect (Nov 16), because RevenueCat keeps the purchase history, under an anonymous app user id, to confirm Pro. Nothing else is collected: signatures and documents stay in the app's storage on the device and are never uploaded, and there is no account and no analytics.
 
 Permissions: only NSPhotoLibraryAddUsageDescription (add-only, asked the first time someone taps Save to Photos). Photos of documents are chosen with the system photo picker, which needs no access. No camera, microphone or location. One local notification, the trial reminder, asked on the onboarding reminder screen.
 
