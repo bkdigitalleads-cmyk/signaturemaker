@@ -11,6 +11,7 @@ import type { Need } from '../rules';
 import Glyph from '../ui/Glyph';
 import { InkButton, Panel, Row, Tap } from '../ui/Kit';
 import { DrawShow, ExportShow, SignShow } from '../ui/Showcase';
+import { t } from '../i18n';
 
 /**
  * First launch, in this order (App.tsx runs it):
@@ -24,11 +25,8 @@ import { DrawShow, ExportShow, SignShow } from '../ui/Showcase';
  *   then the onboarding paywall (close button after 3 seconds).
  * No name or email is asked.
  */
-const PAGES: { title: string; line: string; show: 'draw' | 'export' | 'sign' }[] = [
-  { title: 'Draw a signature that looks like yours.', line: 'The ink follows your hand, with a finger or Apple Pencil.', show: 'draw' },
-  { title: 'Save it as a transparent PNG.', line: 'Only the ink, ready for an email, Word, Canva or a form.', show: 'export' },
-  { title: 'Sign a PDF on your phone.', line: 'Open it from Mail or Files, sign on the line, send it back.', show: 'sign' },
-];
+/** What each value screen shows; the words are t.welcome.pages, in the same order. */
+const PAGES: ('draw' | 'export' | 'sign')[] = ['draw', 'export', 'sign'];
 
 interface TrialOffer {
   length: string;
@@ -44,7 +42,7 @@ async function loadTrialOffer(): Promise<TrialOffer | null> {
   if (!trialLabel(pkg, await getTrialEligibleIds([pkg]))) return null;
   const length = trialLength(pkg.product.introPrice);
   if (!length) return null;
-  return { length, then: `${pkg.product.priceString} a week` };
+  return { length, then: t.paywall.perWeek(pkg.product.priceString) };
 }
 
 /** Starts the eligibility check early; it is ready long before the trial screen. */
@@ -61,17 +59,14 @@ export default function Welcome({ onDone }: { onDone: () => void }) {
   }, []);
   const { width } = useWindowDimensions();
   const next = () => (step < PAGES.length - 1 ? setStep(step + 1) : onDone());
-  const p = PAGES[step];
+  const show = PAGES[step];
+  const words = t.welcome.pages[step];
   const w = width - space.l * 2;
-  const visual = p.show === 'draw' ? <DrawShow theme={theme} width={w} /> : p.show === 'export' ? <ExportShow theme={theme} width={w} /> : <SignShow theme={theme} width={w} />;
-  return <Page key={step} theme={theme} title={p.title} line={p.line} visual={visual} dots={{ count: PAGES.length, active: step }} button="Continue" onPress={next} />;
+  const visual = show === 'draw' ? <DrawShow theme={theme} width={w} /> : show === 'export' ? <ExportShow theme={theme} width={w} /> : <SignShow theme={theme} width={w} />;
+  return <Page key={step} theme={theme} title={words.title} line={words.line} visual={visual} dots={{ count: PAGES.length, active: step }} button={t.common.continue} onPress={next} />;
 }
 
-const NEEDS: { id: Need; label: string; sub: string }[] = [
-  { id: 'document', label: 'Sign a document', sub: 'A PDF or a photo of a form' },
-  { id: 'image', label: 'Make a signature image', sub: 'A transparent PNG for email, Word or Canva' },
-  { id: 'both', label: 'Both', sub: 'Start by making the signature' },
-];
+const NEEDS: Need[] = ['document', 'image', 'both'];
 
 /** "What do you need today?" Only sets which screen comes first. */
 export function NeedStep({ onDone }: { onDone: () => void }) {
@@ -83,21 +78,22 @@ export function NeedStep({ onDone }: { onDone: () => void }) {
     <View style={[styles.container, { backgroundColor: theme.bg, paddingBottom: Math.max(insets.bottom, space.l) }]}>
       <View style={styles.listPage}>
         <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header">
-          What do you need today?
+          {t.welcome.needTitle}
         </Text>
-        <Text style={[type.body, styles.line, { color: theme.inkSoft }]}>You can do both any time. This only picks where you start.</Text>
+        <Text style={[type.body, styles.line, { color: theme.inkSoft }]}>{t.welcome.needLine}</Text>
         <Panel theme={theme} style={{ marginTop: space.xl }}>
-          {NEEDS.map((n, i) => {
-            const on = picked === n.id;
+          {NEEDS.map((id, i) => {
+            const on = picked === id;
+            const n = t.welcome.needs[id];
             return (
               <Tap
-                key={n.id}
-                onPress={() => setPicked(n.id)}
+                key={id}
+                onPress={() => setPicked(id)}
                 style={[styles.need, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.rule }, on && { backgroundColor: theme.picked }]}
                 pressedStyle={{ backgroundColor: theme.raised }}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: on }}
-                accessibilityLabel={`${n.label}. ${n.sub}`}
+                accessibilityLabel={t.welcome.needA11y(n.label, n.sub)}
               >
                 <View style={[styles.radio, { borderColor: on ? theme.ink : theme.inkFaint }]}>{on ? <View style={[styles.radioDot, { backgroundColor: theme.ink }]} /> : null}</View>
                 <View style={{ flex: 1 }}>
@@ -112,7 +108,7 @@ export function NeedStep({ onDone }: { onDone: () => void }) {
       <View style={styles.footer}>
         <InkButton
           theme={theme}
-          label="Continue"
+          label={t.common.continue}
           onPress={() => {
             setPrefs({ need: picked });
             onDone();
@@ -155,16 +151,16 @@ export function TrialSteps({ onDone }: { onDone: () => void }) {
     return (
       <Page
         theme={theme}
-        title={`Try it free for ${offer.length}.`}
-        line={`Then ${offer.then}. Cancel in Settings any time before it ends.`}
-        button="Try it free"
+        title={t.welcome.trialTitle(offer.length)}
+        line={t.welcome.trialLine(offer.then)}
+        button={t.welcome.tryFree}
         onPress={() => setStep('remind')}
         noPayment
         visual={
           <Panel theme={theme} style={{ alignSelf: 'stretch' }}>
-            <Row theme={theme} first glyph="check" label="Today" sub="Every pen and font, exports and signed documents with no mark." />
-            <Row theme={theme} glyph="date" label="The day before it ends" sub="One reminder, so nothing surprises you." />
-            <Row theme={theme} glyph="star" label={`After ${offer.length}`} sub={`${offer.then[0].toUpperCase()}${offer.then.slice(1)}. Cancel before then and pay nothing.`} />
+            <Row theme={theme} first glyph="check" label={t.welcome.today} sub={t.welcome.todaySub} />
+            <Row theme={theme} glyph="date" label={t.welcome.dayBefore} sub={t.welcome.dayBeforeSub} />
+            <Row theme={theme} glyph="star" label={t.welcome.after(offer.length)} sub={t.welcome.afterSub(offer.then)} />
           </Panel>
         }
       />
@@ -174,9 +170,9 @@ export function TrialSteps({ onDone }: { onDone: () => void }) {
   return (
     <Page
       theme={theme}
-      title="We’ll remind you the day before it ends."
-      line="It is the only notification the app sends."
-      button="Continue"
+      title={t.welcome.remindTitle}
+      line={t.welcome.remindLine}
+      button={t.common.continue}
       waiting={waiting}
       onPress={async () => {
         setWaiting(true);
@@ -222,7 +218,7 @@ function Page({
         {line ? <Text style={[type.body, styles.line, { color: theme.inkSoft }]}>{line}</Text> : null}
       </View>
       {dots && (
-        <View style={styles.dots} accessible accessibilityLabel={`Page ${dots.active + 1} of ${dots.count}`}>
+        <View style={styles.dots} accessible accessibilityLabel={t.common.pageOf(dots.active + 1, dots.count)}>
           {Array.from({ length: dots.count }, (_, i) => (
             <View key={i} style={[styles.dot, { backgroundColor: i === dots.active ? theme.ink : theme.rule }, i === dots.active && styles.dotOn]} />
           ))}
@@ -233,7 +229,7 @@ function Page({
         {noPayment && (
           <View style={styles.noPaymentRow}>
             <Glyph name="check" size={18} color={theme.ink} weight={2.2} />
-            <Text style={[type.strong, { color: theme.ink }]}>No payment now</Text>
+            <Text style={[type.strong, { color: theme.ink }]}>{t.paywall.noPayment}</Text>
           </View>
         )}
       </View>

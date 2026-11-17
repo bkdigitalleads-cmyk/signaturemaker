@@ -38,6 +38,12 @@
         ]
       }
     },
+    "locales": {
+      "de": "./assets/locales/de.json",
+      "fr": "./assets/locales/fr.json",
+      "es": "./assets/locales/es.json",
+      "it": "./assets/locales/it.json"
+    },
     "android": {
       "package": "com.bwk.signaturemaker",
       "adaptiveIcon": {
@@ -78,6 +84,20 @@
           "photosPermission": false,
           "savePhotosPermission": "Signature Maker saves your signature image to Photos when you tap Save to Photos. It never reads your library.",
           "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "en",
+              "de",
+              "fr",
+              "es",
+              "it"
+            ]
+          }
         }
       ],
       "./plugins/withoutPushEntitlement"

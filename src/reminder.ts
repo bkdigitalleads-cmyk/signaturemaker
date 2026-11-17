@@ -7,6 +7,7 @@ import * as Notifications from 'expo-notifications';
 import Purchases from 'react-native-purchases';
 import { ENTITLEMENT_ID, isBillingAvailable } from './purchases';
 import { trialReminderAt } from './offer';
+import { t } from './i18n';
 
 const TRIAL_ID = 'signaturemaker.trialReminder';
 
@@ -70,8 +71,9 @@ export async function scheduleTrialReminderIfTrial(): Promise<boolean> {
     await Notifications.scheduleNotificationAsync({
       identifier: TRIAL_ID,
       content: {
-        title: 'Your free trial ends tomorrow',
-        body: 'Signature Maker Pro renews tomorrow. Cancel anytime in Settings, Apple ID, Subscriptions.',
+        // In the app's language when the trial starts (the reminder is scheduled then).
+        title: t.reminder.title,
+        body: t.reminder.body,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,

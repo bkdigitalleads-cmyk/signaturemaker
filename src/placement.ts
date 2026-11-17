@@ -9,6 +9,8 @@
  *    at the bottom left of the crop box, y up. pdf-lib draws here.
  */
 
+import { formatLocale } from './format.ts';
+
 export interface PageBox {
   /** The crop box in PDF user space (what viewers show). */
   x: number;
@@ -216,9 +218,9 @@ export function scaleBox<T extends { x: number; y: number; width: number; height
   return { ...b, x: cx - width / 2, y: cy - height / 2, width, height };
 }
 
-/** Today, short ("Nov 3, 2026"), for the date stamp. */
+/** Today, short, for the date stamp, in the device's locale ("Nov 3, 2026", "3. Nov. 2026", "3 nov. 2026"). */
 export function shortDate(ms: number, locale?: string): string {
-  return new Date(ms).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+  return new Date(ms).toLocaleDateString(locale ?? formatLocale(), { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export type Grab = { id: string; mode: 'move' | 'resize' };

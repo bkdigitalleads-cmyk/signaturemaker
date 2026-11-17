@@ -3,6 +3,8 @@ import { GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
 import { Canvas, Group, Path } from '@shopify/react-native-skia';
 import { RawPoint, Stroke, PenId, SizeStep, strokePath } from '../stroke';
 import { Theme, radius, space, type } from '../theme';
+import { t } from '../i18n';
+import { num } from '../format';
 
 /**
  * The drawing pad: a sheet of paper with a thin signing line and a small
@@ -21,7 +23,7 @@ export default function Pad({
   pen,
   size,
   inkHex,
-  placeholder = 'Draw with a finger or Apple Pencil',
+  placeholder = t.pad.placeholder,
   baseline = 0.7,
 }: {
   theme: Theme;
@@ -110,8 +112,8 @@ export default function Pad({
         onResponderTerminate={end}
         accessible
         accessibilityRole="image"
-        accessibilityLabel={empty ? 'Signature pad, empty. Draw your signature with a finger or Apple Pencil, or choose Type instead.' : `Signature pad with ${strokes.length} ${strokes.length === 1 ? 'stroke' : 'strokes'}`}
-        accessibilityHint="Draw with one finger. Type instead is above the pad."
+        accessibilityLabel={empty ? t.pad.empty : t.pad.strokes(strokes.length, num(strokes.length))}
+        accessibilityHint={t.pad.hint}
       />
     </View>
   );

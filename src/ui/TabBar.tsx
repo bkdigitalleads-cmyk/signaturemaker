@@ -4,14 +4,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme, space, type } from '../theme';
 import Glyph, { GlyphName } from './Glyph';
 import { Tap } from './Kit';
+import { t } from '../i18n';
 
 export type Tab = 'create' | 'library' | 'documents' | 'settings';
 
-const TABS: { id: Tab; label: string; glyph: GlyphName }[] = [
-  { id: 'create', label: 'Create', glyph: 'create' },
-  { id: 'library', label: 'Library', glyph: 'library' },
-  { id: 'documents', label: 'Documents', glyph: 'documents' },
-  { id: 'settings', label: 'Settings', glyph: 'settings' },
+const TABS: { id: Tab; glyph: GlyphName }[] = [
+  { id: 'create', glyph: 'create' },
+  { id: 'library', glyph: 'library' },
+  { id: 'documents', glyph: 'documents' },
+  { id: 'settings', glyph: 'settings' },
 ];
 
 /** The four places, along the bottom. The current one is in full ink, the rest faint. */
@@ -19,22 +20,23 @@ export default function TabBar({ theme, tab, onTab }: { theme: Theme; tab: Tab; 
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bar, { backgroundColor: theme.bg, borderTopColor: theme.edge, paddingBottom: Math.max(insets.bottom - space.s, space.s) }]} accessibilityRole="tablist">
-      {TABS.map((t) => {
-        const on = t.id === tab;
+      {TABS.map((tb) => {
+        const on = tb.id === tab;
+        const label = t.tabs[tb.id];
         const color = on ? theme.ink : theme.inkFaint;
         return (
           <Tap
-            key={t.id}
-            onPress={() => onTab(t.id)}
+            key={tb.id}
+            onPress={() => onTab(tb.id)}
             style={styles.tab}
             pressedStyle={{ opacity: 0.6 }}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
-            accessibilityLabel={t.label}
+            accessibilityLabel={label}
           >
-            <Glyph name={t.glyph} size={26} color={color} weight={on ? 1.9 : 1.6} />
+            <Glyph name={tb.glyph} size={26} color={color} weight={on ? 1.9 : 1.6} />
             <Text style={[type.small, styles.label, { color, fontWeight: on ? '600' : '400' }]} numberOfLines={1} maxFontSizeMultiplier={1.3} adjustsFontSizeToFit minimumFontScale={0.75}>
-              {t.label}
+              {label}
             </Text>
           </Tap>
         );

@@ -8,6 +8,8 @@ import { cancelTrialReminder } from '../reminder';
 import { kvSet } from '../store';
 import { PRIVACY_URL, SUPPORT_EMAIL, SUPPORT_MAIL_URL, SUPPORT_URL, TERMS_URL } from '../links';
 import { Caption, Label, Panel, Row, Title } from '../ui/Kit';
+import { t } from '../i18n';
+import { num } from '../format';
 
 /** Pro, restore, help and the one-line About. Test tools behind seven taps on the version, in test builds only. */
 export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: () => void }) {
@@ -26,21 +28,21 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
     if (res.ok) cancelTrialReminder();
     if (res.ok && res.isPro) {
       setIsPro(true);
-      Alert.alert('Pro is back on', 'Every pen and font, initials, the date and text, and files with no mark.');
-    } else if (res.ok) Alert.alert('Nothing to restore', 'This Apple ID has no Signature Maker Pro purchase.');
-    else Alert.alert('Restore did not work', res.error ?? 'Try once more.');
+      Alert.alert(t.purchase.proBack, t.purchase.proBody);
+    } else if (res.ok) Alert.alert(t.purchase.nothing, t.purchase.nothingBody);
+    else Alert.alert(t.purchase.restoreFailed, res.error ?? t.common.tryAgain);
   };
 
   const deleteAll = () =>
-    Alert.alert('Delete every signature and signed document?', 'This empties the library and the Documents list on this iPhone. Files you already sent are not affected.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t.settings.deleteAllTitle, t.settings.deleteAllBody, [
+      { text: t.common.cancel, style: 'cancel' },
       {
-        text: 'Delete',
+        text: t.common.delete,
         style: 'destructive',
         onPress: () => {
           setLibrary([]);
           setRecent([]);
-          say('Deleted.');
+          say(t.settings.deleted);
         },
       },
     ]);
@@ -54,61 +56,61 @@ export default function Settings({ onReplayOnboarding }: { onReplayOnboarding: (
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
-      <Title theme={theme}>Settings</Title>
+      <Title theme={theme}>{t.settings.title}</Title>
 
       <View>
-        <Label theme={theme}>Pro</Label>
+        <Label theme={theme}>{t.settings.pro}</Label>
         <Panel theme={theme}>
           {isPro ? (
-            <Row theme={theme} first glyph="check" label="Signature Maker Pro is on" sub="Every pen and font, initials, the date and text, files with no mark" />
+            <Row theme={theme} first glyph="check" label={t.settings.proOn} sub={t.settings.proSub} />
           ) : (
-            <Row theme={theme} first glyph="star" label="Signature Maker Pro" sub="Every pen and font, initials, the date and text, files with no mark" onPress={() => askPro('pro')} />
+            <Row theme={theme} first glyph="star" label={t.settings.proName} sub={t.settings.proSub} onPress={() => askPro('pro')} />
           )}
-          <Row theme={theme} glyph="undo" label={restoring ? 'Restoring' : 'Restore purchases'} onPress={restore} right={<View />} />
+          <Row theme={theme} glyph="undo" label={restoring ? t.purchase.restoring : t.purchase.restore} onPress={restore} right={<View />} />
         </Panel>
       </View>
 
       <View>
-        <Label theme={theme}>Help</Label>
+        <Label theme={theme}>{t.settings.help}</Label>
         <Panel theme={theme}>
-          <Row theme={theme} first label="Support" sub="How to make, export and sign" onPress={() => Linking.openURL(SUPPORT_URL)} />
+          <Row theme={theme} first label={t.settings.support} sub={t.settings.supportSub} onPress={() => Linking.openURL(SUPPORT_URL)} />
           <Row
             theme={theme}
-            label="Email support"
+            label={t.settings.emailSupport}
             sub={SUPPORT_EMAIL}
-            hint="Opens Mail with the subject Signature Maker support"
-            onPress={() => Linking.openURL(SUPPORT_MAIL_URL).catch(() => Alert.alert('Mail did not open', `Write to ${SUPPORT_EMAIL}.`))}
+            hint={t.settings.emailHint}
+            onPress={() => Linking.openURL(SUPPORT_MAIL_URL).catch(() => Alert.alert(t.common.mailDidNotOpen, t.settings.writeTo(SUPPORT_EMAIL)))}
           />
-          <Row theme={theme} label="Privacy Policy" onPress={() => Linking.openURL(PRIVACY_URL)} />
-          <Row theme={theme} label="Terms of Use (EULA)" onPress={() => Linking.openURL(TERMS_URL)} />
+          <Row theme={theme} label={t.paywall.privacy} onPress={() => Linking.openURL(PRIVACY_URL)} />
+          <Row theme={theme} label={t.paywall.terms} onPress={() => Linking.openURL(TERMS_URL)} />
         </Panel>
       </View>
 
       <View>
-        <Label theme={theme}>About</Label>
+        <Label theme={theme}>{t.settings.about}</Label>
         <Panel theme={theme} style={styles.about}>
-          <Text style={[type.body, { color: theme.ink }]}>Signature Maker creates a signature image and places it on your document. It does not verify identity or certify signatures.</Text>
-          <Text style={[type.small, { color: theme.inkSoft }]}>No account. Your signatures and documents stay on this iPhone.</Text>
+          <Text style={[type.body, { color: theme.ink }]}>{t.settings.legal}</Text>
+          <Text style={[type.small, { color: theme.inkSoft }]}>{t.settings.local}</Text>
           <Text style={[type.small, { color: theme.inkFaint }]} onPress={versionTap} accessibilityRole="text">
-            Version {version}
+            {t.settings.version(version)}
           </Text>
         </Panel>
       </View>
 
       <Panel theme={theme}>
-        <Row theme={theme} first label="Delete all signatures and documents" tone="danger" onPress={deleteAll} right={<View />} />
+        <Row theme={theme} first label={t.settings.deleteAll} tone="danger" onPress={deleteAll} right={<View />} />
       </Panel>
-      {library.length + recent.length > 0 ? <Caption theme={theme}>{`${library.length} saved ${library.length === 1 ? 'signature' : 'signatures'}, ${recent.length} signed ${recent.length === 1 ? 'document' : 'documents'} on this iPhone.`}</Caption> : null}
+      {library.length + recent.length > 0 ? <Caption theme={theme}>{t.settings.counts(library.length, recent.length, num(library.length), num(recent.length))}</Caption> : null}
 
       {testBuild && taps >= 7 ? (
         <View>
-          <Label theme={theme}>Testing (test builds only)</Label>
+          <Label theme={theme}>{t.settings.testing}</Label>
           <Panel theme={theme}>
-            <Row theme={theme} first label="Act as a free user" right={<Switch value={actFree} onValueChange={(v) => setActFree(v)} />} />
-            <Row theme={theme} label="Make the first export and document free again" onPress={() => { resetUsage(); say('Counters reset.'); }} right={<View />} />
+            <Row theme={theme} first label={t.settings.actFree} right={<Switch value={actFree} onValueChange={(v) => setActFree(v)} />} />
+            <Row theme={theme} label={t.settings.resetFree} onPress={() => { resetUsage(); say(t.settings.countersReset); }} right={<View />} />
             <Row
               theme={theme}
-              label="Show onboarding again"
+              label={t.settings.replay}
               onPress={() => {
                 kvSet('flag.onboarded', '0').catch(() => {});
                 onReplayOnboarding();

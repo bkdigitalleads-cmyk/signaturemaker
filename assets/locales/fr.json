@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Signature Maker",
+    "NSPhotoLibraryAddUsageDescription": "Signature Maker enregistre l’image de votre signature dans Photos quand vous touchez Enregistrer dans Photos. L’app ne lit jamais votre photothèque."
+  }
+}

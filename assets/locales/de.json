@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Signature Maker",
+    "NSPhotoLibraryAddUsageDescription": "Signature Maker speichert dein Unterschriftsbild in Fotos, wenn du auf „In Fotos speichern“ tippst. Die App liest deine Mediathek nie."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Signature Maker",
+    "NSPhotoLibraryAddUsageDescription": "Signature Maker guarda la imagen de tu firma en Fotos cuando tocas Guardar en Fotos. Nunca lee tu fototeca."
+  }
+}
