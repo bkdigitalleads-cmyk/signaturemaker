@@ -14,6 +14,7 @@ import { fontById } from './fonts';
 import { fontModule } from './fontFiles';
 import type { Art } from './library';
 import { MARK_TEXT } from './flatten';
+import { t } from './i18n';
 
 /** Typed signatures are laid out at this size (points) before cropping. */
 export const TYPED_SIZE = 96;
@@ -27,7 +28,7 @@ async function typeface(fontId: string): Promise<SkTypeface> {
   const uri = RNImage.resolveAssetSource(fontModule(f.file)).uri;
   const data = await Skia.Data.fromURI(uri);
   const tf = Skia.Typeface.MakeFreeTypeFaceFromData(data);
-  if (!tf) throw new Error(`Could not load ${f.name}`);
+  if (!tf) throw new Error(t.errors.fontMissing(f.name));
   typefaces.set(f.id, tf);
   return tf;
 }

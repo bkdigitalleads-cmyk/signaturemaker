@@ -7,6 +7,7 @@ import { Theme, radius, space, type } from '../theme';
 import { Tap } from './Kit';
 import Glyph from './Glyph';
 import { tick } from './motion';
+import { t } from '../i18n';
 
 /** A pen's glyph: a real squiggle from the pen engine, so the row shows what each pen does. */
 export function PenGlyph({ pen, color, size = 1 }: { pen: PenId; color: string; size?: SizeStep }) {
@@ -43,7 +44,7 @@ export default function PenRow({
 }) {
   return (
     <View style={styles.wrap}>
-      <View style={styles.pens} accessibilityRole="radiogroup" accessibilityLabel="Pen">
+      <View style={styles.pens} accessibilityRole="radiogroup" accessibilityLabel={t.pens.group}>
         {PENS.filter((p) => !pens || pens.includes(p.id)).map((p) => {
           const on = p.id === pen;
           const lock = locked(p.id);
@@ -58,7 +59,7 @@ export default function PenRow({
               pressedStyle={{ backgroundColor: theme.raised }}
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
-              accessibilityLabel={lock ? `${p.label} pen, Pro` : `${p.label} pen`}
+              accessibilityLabel={lock ? t.common.withPro(t.pens.a11y(p.label)) : t.pens.a11y(p.label)}
               accessibilityHint={p.hint}
             >
               <PenGlyph pen={p.id} color={theme.ink} size={size} />
@@ -73,7 +74,7 @@ export default function PenRow({
         })}
       </View>
       <View style={styles.second}>
-        <View style={styles.inks} accessibilityRole="radiogroup" accessibilityLabel="Ink color">
+        <View style={styles.inks} accessibilityRole="radiogroup" accessibilityLabel={t.create.inkColor}>
           {INKS.map((i) => {
             const on = i.id === ink;
             return (
@@ -86,14 +87,14 @@ export default function PenRow({
                 style={[styles.dotWrap, { borderColor: on ? theme.ink : 'transparent' }]}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: on }}
-                accessibilityLabel={`${i.label} ink`}
+                accessibilityLabel={`${i.phrase[0].toUpperCase()}${i.phrase.slice(1)}`}
               >
                 <View style={[styles.dot, { backgroundColor: i.hex }]} />
               </Tap>
             );
           })}
         </View>
-        <View style={styles.inks} accessibilityRole="radiogroup" accessibilityLabel="Thickness">
+        <View style={styles.inks} accessibilityRole="radiogroup" accessibilityLabel={t.pens.thickness}>
           {([0, 1, 2] as SizeStep[]).map((s) => {
             const on = s === size;
             return (
@@ -106,7 +107,7 @@ export default function PenRow({
                 style={[styles.dotWrap, { borderColor: on ? theme.ink : 'transparent' }]}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: on }}
-                accessibilityLabel={['Thin', 'Medium', 'Thick'][s]}
+                accessibilityLabel={t.pens.sizes[s]}
               >
                 <View style={{ width: 5 + s * 4, height: 5 + s * 4, borderRadius: radius.round, backgroundColor: theme.ink }} />
               </Tap>

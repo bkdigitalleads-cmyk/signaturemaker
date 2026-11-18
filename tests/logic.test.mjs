@@ -506,7 +506,7 @@ test('plans: three rows; weekly first and preselected on onboarding, lifetime in
   assert.equal(O.planTypeOf('LIFETIME'), 'LIFETIME');
   assert.equal(O.planTypeOf('MONTHLY'), null);
   assert.equal(O.planTitle('LIFETIME'), 'Lifetime, pay once');
-  const d = O.disclosureText({ weekly: '$4.99', yearly: '$19.99', lifetime: '$39.99', trial: '3 days free' });
+  const d = O.disclosureText({ weekly: '$4.99', yearly: '$19.99', lifetime: '$39.99', trialLength: '3 days' });
   assert.match(d, /Weekly \$4\.99\/week .*3 days free/);
   assert.match(d, /Yearly \$19\.99\/year/);
   assert.match(d, /Lifetime \$39\.99 is a one-time purchase/);
@@ -608,7 +608,7 @@ test('rating asks: wired where they belong (trial start in the paywall, Claim in
   assert.match(pay, /purchaseReview\(\{ onboarding, isPro: true, inTrial: await inFreeTrial\(\) \}\)/);
   const app = readFileSync(`${ROOT}App.tsx`, 'utf8');
   assert.match(app, /afterOnboardingPaywall\(pro\) === 'claim'/);
-  assert.match(app, /label="Claim"[\s\S]{0,120}maybeRequestReview\('claimFree'\)/);
+  assert.match(app, /label=\{t\.app\.claim\}[\s\S]{0,120}maybeRequestReview\('claimFree'\)/);
   assert.match(app, /maybeRequestReviewOnLaunch\(\)/);
   assert.match(readFileSync(`${ROOT}src/screens/Export.tsx`, 'utf8'), /maybeRequestReview\('firstExport'\)/);
   assert.match(readFileSync(`${ROOT}src/screens/Sign.tsx`, 'utf8'), /maybeRequestReview\('firstDocShare'\)/);
@@ -624,8 +624,8 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.equal(app.name, 'Signature Maker');
   assert.equal(app.slug, 'signaturemaker');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.signaturemaker');
-  assert.equal(app.version, '1.0.2');
-  assert.equal(app.ios.buildNumber, "5");
+  assert.equal(app.version, '1.0.3');
+  assert.equal(app.ios.buildNumber, "6");
   assert.equal(JSON.parse(readFileSync(`${ROOT}package.json`, "utf8")).version, app.version);
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.plugins[app.plugins.length - 1], './plugins/withoutPushEntitlement');
@@ -673,7 +673,7 @@ test('copy: no em dashes, banned words or brand names in the app, the website or
   assert.match(support, /mailto:bkdigitalleads@gmail\.com/);
   assert.match(support, /we reply within two business days/);
   assert.match(readFileSync(`${ROOT}src/links.ts`, 'utf8'), /SUPPORT_EMAIL = 'bkdigitalleads@gmail\.com'/);
-  assert.match(readFileSync(`${ROOT}src/screens/Settings.tsx`, 'utf8'), /label="Email support"[\s\S]{0,200}SUPPORT_MAIL_URL/);
+  assert.match(readFileSync(`${ROOT}src/screens/Settings.tsx`, 'utf8'), /label=\{t\.settings\.emailSupport\}[\s\S]{0,200}SUPPORT_MAIL_URL/);
   assert.match(readFileSync(`${ROOT}src/links.ts`, 'utf8'), /subject=\$\{encodeURIComponent\('Signature Maker support'\)\}/);
   // User-facing strings in screens: no exclamation marks inside quotes.
   for (const f of walk(`${ROOT}src/screens`, ['.tsx'])) {
@@ -866,9 +866,193 @@ test('editing pill: above the selection, below near the top or under Whole page,
   assert.equal(P.pillSpot({ x: 400, y: 100, width: 50, height: 20 }, area, pill, null), null);
   // The bottom bar is the pager and a full Done signing: the three buttons are only in the pill.
   const sign = readFileSync(`${ROOT}src/screens/Sign.tsx`, 'utf8');
-  const bar = sign.slice(sign.indexOf('styles.doneRow'), sign.indexOf('label="Done signing"'));
+  const bar = sign.slice(sign.indexOf('styles.doneRow'), sign.indexOf('label={t.sign.doneSigning}'));
+  assert.ok(bar.length > 0);
   assert.ok(!/minus|plus|trash/.test(bar), 'editing buttons in the bottom bar');
   const pillSrc = sign.slice(sign.indexOf('function EditPill'), sign.indexOf('function Tool'));
-  for (const label of ['Make the ${p.kind} smaller', 'Make the ${p.kind} bigger', 'Remove the selected ${p.kind}']) assert.ok(pillSrc.includes(label), label);
+  for (const label of ['t.sign.smaller[p.kind]', 't.sign.bigger[p.kind]', 't.sign.removeSelected[p.kind]']) assert.ok(pillSrc.includes(label), label);
   assert.match(sign, /sel && sel\.page === page && !live \? <EditPill/);
+});
+
+// ---------- languages: English, German, French, Spanish, Italian ----------
+
+const I = await import('../src/i18n.ts');
+const FMT = await import('../src/format.ts');
+
+/** Sample arguments for every function in the dictionary, by its path. A new function needs a line here. */
+const SAMPLES = {
+  'common.withPro': [['Marker']],
+  'common.pageOf': [[2, 5]],
+  'app.openOther': [['Lease.pdf']],
+  'create.inFont': [['Jordan Ellis', 'Great Vibes']],
+  'pad.strokes': [[1, '1'], [3, '3']],
+  'pens.a11y': [['Ink']],
+  'library.card': [['Jordan, blue ink', true, true], ['Jordan', false, false]],
+  'library.deleteTitle': [['Jordan']],
+  'export.pixels': [['1,320', '402']],
+  'export.shareAs': [['Transparent PNG']],
+  'export.preview': [['Jordan', 'PNG']],
+  'documents.row': [['Nov 3', 1, '1'], ['Nov 3', 4, '4']],
+  'documents.openNamed': [['Lease signed.pdf']],
+  'documents.shareNamed': [['Lease signed.pdf']],
+  'documents.removeNamed': [['Lease signed.pdf']],
+  'documents.removeTitle': [['Lease signed.pdf']],
+  'sign.pageCount': [[2, 5]],
+  'sign.pickDefault': [['Jordan']],
+  'sign.placedDate': [['Nov 3, 2026']],
+  'sign.placedText': [['Jordan Ellis']],
+  'signed.body': [['Lease signed.pdf']],
+  'signed.thumb': [[2, 'Lease signed.pdf']],
+  'settings.writeTo': [['bkdigitalleads@gmail.com']],
+  'settings.version': [['1.0.3 (6)']],
+  'settings.counts': [[1, 1, '1', '1'], [3, 12, '3', '12']],
+  'paywall.withTrial': [['Sign every document.', '3 days free']],
+  'paywall.perWeek': [['$4.99']],
+  'paywall.perYear': [['$19.99', '$0.38 a week'], ['$19.99', null]],
+  'paywall.once': [['$39.99']],
+  'paywall.trialThen': [['3 days free', '$4.99']],
+  'offer.period': [[1, 'day'], [3, 'day'], [1, 'week'], [2, 'month'], [1, 'year']],
+  'offer.free': [['3 days']],
+  'offer.yearly': [['$19.99']],
+  'offer.weekly': [['$4.99', '3 days'], ['$4.99', null]],
+  'offer.lifetime': [['$39.99']],
+  'welcome.needA11y': [['Both', 'Start by making the signature']],
+  'welcome.trialTitle': [['3 days']],
+  'welcome.trialLine': [['$4.99 a week']],
+  'welcome.after': [['3 days']],
+  'welcome.afterSub': [['$4.99 a week']],
+  'errors.fontMissing': [['Great Vibes']],
+};
+
+/** Every string a dictionary can show: plain strings, and each function's output for its samples. */
+function rendered(dict, path = '') {
+  const out = [];
+  for (const [k, v] of Object.entries(dict)) {
+    const p = path ? `${path}.${k}` : k;
+    if (typeof v === 'string') out.push([p, v]);
+    else if (typeof v === 'function') {
+      assert.ok(SAMPLES[p], `no sample arguments for ${p}`);
+      for (const args of SAMPLES[p]) out.push([p, v(...args)]);
+    } else out.push(...rendered(v, p));
+  }
+  return out;
+}
+
+/** The shape of a dictionary: every key, with arrays by length and functions by kind. */
+function shape(v) {
+  if (typeof v === 'function') return 'fn';
+  if (typeof v === 'string') return 'str';
+  if (Array.isArray(v)) return v.map(shape);
+  return Object.fromEntries(Object.keys(v).sort().map((k) => [k, shape(v[k])]));
+}
+
+test('languages: German, French, Spanish and Italian have every string English has, and nothing else', () => {
+  assert.deepEqual(I.LANGUAGES, ['en', 'de', 'fr', 'es', 'it']);
+  const en = shape(I.DICTIONARIES.en);
+  for (const lang of I.LANGUAGES) assert.deepEqual(shape(I.DICTIONARIES[lang]), en, lang);
+});
+
+test('languages: every string in every language is plain copy (no em dashes, banned words, exclamations or holes)', () => {
+  const banned = [/\bunlock/i, /\bpremium\b/i, /\bseamless/i, /\beffortless/i, /\belevate/i, /\bpowerful\b/i, /in seconds/i, /\bwelcome\b/i, /\blet's\b/i, /professional-grade/i, /docusign/i, /\badobe\b/i, /acrobat/i];
+  for (const lang of I.LANGUAGES) {
+    for (const [p, s] of rendered(I.DICTIONARIES[lang])) {
+      assert.ok(typeof s === 'string' && s.trim().length > 0, `${lang} ${p} is empty`);
+      assert.ok(!s.includes('—'), `em dash in ${lang} ${p}`);
+      assert.ok(!s.includes('!'), `exclamation in ${lang} ${p}: ${s}`);
+      assert.ok(!/\bundefined\b|\bnull\b|\bNaN\b|\[object/.test(s), `hole in ${lang} ${p}: ${s}`);
+      for (const w of banned) assert.equal(s.match(w), null, `${w} in ${lang} ${p}`);
+    }
+  }
+  // German says du throughout: no formal Sie, Ihnen or Ihr in the middle of a sentence.
+  for (const [p, s] of rendered(I.DICTIONARIES.de)) assert.ok(!/[^.?:]\s(Sie|Ihnen|Ihre?[mnrs]?)\b/.test(s), `formal address in de ${p}: ${s}`);
+  // The legal line keeps its two parts in every language: makes an image and places it; verifies and certifies nothing.
+  const legal = { en: [/image/, /does not verify identity or certify/], de: [/Bild/, /prüft keine Identität und beglaubigt keine/], fr: [/image/, /ne vérifie pas l’identité et ne certifie pas/], es: [/imagen/, /No verifica la identidad ni certifica/], it: [/immagine/, /Non verifica l’identità e non certifica/] };
+  for (const lang of I.LANGUAGES) for (const r of legal[lang]) assert.match(I.DICTIONARIES[lang].settings.legal, r, lang);
+});
+
+test('languages: the subscription disclosure keeps every price, the trial and the 24 hours in every language; Terms and Privacy stay linked', () => {
+  const prices = { weekly: '4,99 €', yearly: '19,99 €', lifetime: '39,99 €' };
+  try {
+    for (const lang of I.LANGUAGES) {
+      I.setLocale([lang]);
+      const len = O.trialLength({ price: 0, periodNumberOfUnits: 3, periodUnit: 'DAY' });
+      const d = O.disclosureText({ ...prices, trialLength: len });
+      for (const p of Object.values(prices)) assert.ok(d.includes(p), `${lang} misses ${p}`);
+      assert.ok(d.includes(len), `${lang} misses the trial length`);
+      assert.match(d, /24/, `${lang} misses the 24 hours`);
+      assert.ok(d.includes(lang === 'fr' ? 'identifiant Apple' : lang === 'en' ? 'Apple ID' : lang === 'de' ? 'Apple-ID' : lang === 'es' ? 'ID de Apple' : 'ID Apple'), `${lang} misses the Apple ID`);
+      // Without a trial, no trial words; with no prices, the general line and the billing line.
+      assert.ok(!O.disclosureText({ ...prices }).includes(len), `${lang} trial without a trial`);
+      assert.match(O.disclosureText({}), /24/);
+      assert.equal(O.planTitle('LIFETIME'), I.DICTIONARIES[lang].paywall.lifetime);
+    }
+  } finally {
+    I.setLocale(['en-US']);
+  }
+  const pay = readFileSync(`${ROOT}src/screens/Paywall.tsx`, 'utf8');
+  assert.match(pay, /Linking\.openURL\(TERMS_URL\)[\s\S]{0,200}\{t\.paywall\.terms\}/);
+  assert.match(pay, /Linking\.openURL\(privacyUrl\)[\s\S]{0,200}\{t\.paywall\.privacy\}/);
+  // Prices on the paywall are StoreKit's own strings (priceString), never a number formatted by the app, except the yearly per-week line.
+  assert.equal((pay.match(/money\(/g) ?? []).length, 1);
+  assert.match(pay, /disclosureText\(\{\s*weekly: weeklyPkg\?\.product\.priceString,\s*yearly: yearlyPkg\?\.product\.priceString,\s*lifetime: lifetimePkg\?\.product\.priceString/);
+});
+
+test('languages: the phone’s first language the app has wins, English otherwise; words, dates and numbers follow', () => {
+  assert.equal(I.pickLanguage(['de-AT']), 'de');
+  assert.equal(I.pickLanguage(['ja-JP', 'fr-CA', 'en-US']), 'fr');
+  assert.equal(I.pickLanguage(['es-419']), 'es');
+  assert.equal(I.pickLanguage(['it_IT']), 'it');
+  assert.equal(I.pickLanguage(['pt-BR', 'nl-NL']), 'en');
+  assert.equal(I.pickLanguage([]), 'en');
+  assert.equal(I.pickLanguage([null, undefined, 'DE']), 'de');
+  try {
+    assert.equal(I.setLocale(['de-DE', 'en-US']), 'de');
+    assert.equal(I.language(), 'de');
+    assert.equal(I.t.tabs.settings, 'Einstellungen');
+    // Module-level lists read their words when used, so they follow too.
+    assert.equal(L.INKS.find((i) => i.id === 'blue').label, 'Blau');
+    assert.equal(S.PENS.find((p) => p.id === 'fountain').label, 'Füller');
+    assert.equal(L.suggestName({ kind: 'drawn', strokes: [] }, 'blue', []), 'Unterschrift, blaue Tinte');
+    assert.equal(O.trialLength({ price: 0, periodNumberOfUnits: 3, periodUnit: 'DAY' }), '3 Tage');
+    assert.equal(O.trialLabelFrom({ price: 0, periodNumberOfUnits: 1, periodUnit: 'WEEK' }, true), '1 Woche kostenlos');
+    assert.equal(P.shortDate(Date.UTC(2026, 10, 3, 17)), '3. Nov. 2026');
+    assert.equal(FMT.num(1320), '1.320');
+    assert.equal(FMT.money(0.38, 'EUR'), '0,38\u00a0€');
+    I.setLocale(['fr-FR']);
+    assert.equal(I.t.common.close, 'Fermer');
+    assert.equal(P.shortDate(Date.UTC(2026, 10, 3, 17)), '3 nov. 2026');
+    assert.equal(O.trialLabelFrom({ price: 0, periodNumberOfUnits: 3, periodUnit: 'DAY' }, true), 'essai gratuit de 3 jours');
+    // A language the app does not have: English words, the phone's own date format.
+    assert.equal(I.setLocale(['en-GB']), 'en');
+    assert.equal(P.shortDate(Date.UTC(2026, 10, 3, 17)), '3 Nov 2026');
+    assert.equal(I.setLocale(['pt-BR']), 'en');
+    assert.equal(I.t.tabs.settings, 'Settings');
+  } finally {
+    I.setLocale(['en-US']);
+  }
+  assert.equal(L.suggestName({ kind: 'drawn', strokes: [] }, 'blue', []), 'Signature, blue ink');
+  assert.equal(P.shortDate(Date.UTC(2026, 10, 3, 17)), 'Nov 3, 2026');
+});
+
+test('languages: read once at startup before the app loads, declared to iOS, the Photos prompt translated, nothing left in English in the screens', () => {
+  const index = readFileSync(`${ROOT}index.ts`, 'utf8');
+  assert.ok(index.indexOf("require('./src/locale')") < index.indexOf("require('./App')"), 'the language is set before App loads');
+  assert.match(readFileSync(`${ROOT}src/locale.ts`, 'utf8'), /setLocale\(getLocales\(\)\.map\(\(l\) => l\.languageTag\)\)/);
+  const app = JSON.parse(readFileSync(`${ROOT}app.json`, 'utf8')).expo;
+  const loc = app.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-localization');
+  assert.ok(loc, 'expo-localization plugin');
+  assert.deepEqual(loc[1].supportedLocales.ios, ['en', 'de', 'fr', 'es', 'it']);
+  assert.equal(app.plugins[app.plugins.length - 1], './plugins/withoutPushEntitlement');
+  assert.deepEqual(Object.keys(app.locales).sort(), ['de', 'es', 'fr', 'it']);
+  for (const [lang, file] of Object.entries(app.locales)) {
+    const strings = JSON.parse(readFileSync(`${ROOT}${file}`, 'utf8')).ios;
+    assert.equal(strings.CFBundleDisplayName, 'Signature Maker', lang);
+    assert.ok(strings.NSPhotoLibraryAddUsageDescription.length > 20, lang);
+    assert.ok(!/—|!/.test(JSON.stringify(strings)), lang);
+  }
+  // No alert, toast, label or hint in the app's screens is a literal any more: they all come from the dictionary.
+  for (const f of [...walk(`${ROOT}src/screens`, ['.tsx']), ...walk(`${ROOT}src/ui`, ['.tsx']), `${ROOT}App.tsx`]) {
+    const src = readFileSync(f, 'utf8');
+    assert.equal(src.match(/Alert\.(alert|prompt)\(['`]|say\('|(label|hint|placeholder|title|button|accessibilityLabel|accessibilityHint)="[A-Za-z][a-z]/g), null, f);
+  }
 });

@@ -12,6 +12,8 @@
  * folds back on itself.
  */
 
+import { t } from './i18n.ts';
+
 export type PenId = 'ink' | 'ballpoint' | 'marker' | 'fountain';
 export type SizeStep = 0 | 1 | 2;
 
@@ -35,17 +37,26 @@ export interface Rect {
 
 export interface PenInfo {
   id: PenId;
-  label: string;
+  /** The pen's name, in the app's language. */
+  readonly label: string;
   /** One line for VoiceOver and the pen row's long press. */
-  hint: string;
+  readonly hint: string;
 }
 
-export const PENS: PenInfo[] = [
-  { id: 'ink', label: 'Ink', hint: 'Thicker when you go slowly, thinner when you go fast' },
-  { id: 'ballpoint', label: 'Ballpoint', hint: 'An even, thin line' },
-  { id: 'marker', label: 'Marker', hint: 'An even, bold line' },
-  { id: 'fountain', label: 'Fountain', hint: 'Thick on the way down, thin on the way up' },
-];
+/** A pen whose words are read from the dictionary when used, so they follow the language. */
+function pen(id: PenId): PenInfo {
+  return {
+    id,
+    get label() {
+      return t.pens[id].label;
+    },
+    get hint() {
+      return t.pens[id].hint;
+    },
+  };
+}
+
+export const PENS: PenInfo[] = [pen('ink'), pen('ballpoint'), pen('marker'), pen('fountain')];
 
 /** The three thickness steps, as the base width in canvas points. */
 export const BASE_WIDTH: Record<SizeStep, number> = { 0: 1.8, 1: 2.6, 2: 3.8 };

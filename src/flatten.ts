@@ -11,6 +11,7 @@
 import { PDFDocument, PDFFont, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { boxToPdf, textToPdf } from './placement.ts';
 import type { PageBox } from './placement.ts';
+import { t } from './i18n.ts';
 
 export interface ImageItem {
   kind: 'image';
@@ -38,7 +39,7 @@ export type FlatItem = ImageItem | TextItem;
 
 export class LockedPdfError extends Error {
   constructor() {
-    super('This PDF is locked with a password, so it cannot be signed here.');
+    super(t.errors.lockedPdf);
   }
 }
 

@@ -1,13 +1,15 @@
 /**
- * Plan and trial rules as pure functions (no imports), checked by `npm test`.
+ * Plan and trial rules as pure functions (no native imports), checked by `npm test`.
  * The store objects come from RevenueCat; these only look at plain fields,
  * so prices and trial lengths always come from StoreKit.
  *
  * Engine copy (Migraine Log, Image to Text, Pumping, Odo 1.0.6) with one
  * addition: the lifetime package ($rc_lifetime, a one-time non-consumable),
  * so the paywall has three rows. trialLength, trialLabelFrom,
- * trialReminderAt and yearlySavingPct are unchanged.
+ * trialReminderAt and yearlySavingPct are unchanged. The words come from
+ * the dictionary (src/strings), so they follow the device's language.
  */
+import { t } from './i18n.ts';
 
 export interface IntroLike {
   price: number;
@@ -16,18 +18,19 @@ export interface IntroLike {
   periodUnit: string;
 }
 
-/** "3 days" for a free trial, or null when the intro offer is not free. */
+const UNITS = ['day', 'week', 'month', 'year'] as const;
+
+/** "3 days" for a free trial (in the app's language), or null when the intro offer is not free. */
 export function trialLength(intro: IntroLike | null | undefined): string | null {
   if (!intro || intro.price !== 0 || !(intro.periodNumberOfUnits > 0)) return null;
-  const n = intro.periodNumberOfUnits;
-  const unit = intro.periodUnit.toLowerCase();
-  return `${n} ${unit}${n === 1 ? '' : 's'}`;
+  const unit = UNITS.find((u) => u === intro.periodUnit.toLowerCase()) ?? 'day';
+  return t.offer.period(intro.periodNumberOfUnits, unit);
 }
 
 /** "3 days free", only when the trial exists and this Apple ID can still get it. */
 export function trialLabelFrom(intro: IntroLike | null | undefined, eligible: boolean): string | null {
   const len = eligible ? trialLength(intro) : null;
-  return len ? `${len} free` : null;
+  return len ? t.offer.free(len) : null;
 }
 
 const HOUR = 60 * 60 * 1000;
@@ -70,7 +73,7 @@ export function preselect(available: string[], onboarding: boolean): PlanType | 
 
 /** The row title for a plan. */
 export function planTitle(t: PlanType): string {
-  return t === 'WEEKLY' ? 'Weekly' : t === 'ANNUAL' ? 'Yearly' : 'Lifetime, pay once';
+  return t === 'WEEKLY' ? words().weekly : t === 'ANNUAL' ? words().yearly : words().lifetime;
 }
 
 /** Whole percent saved by paying yearly instead of 52 weeks, or null when it is not a saving. */
@@ -80,20 +83,20 @@ export function yearlySavingPct(weeklyPrice: number, yearlyPrice: number): numbe
   return pct > 0 ? pct : null;
 }
 
+// The paywall's words (the plan titles), read at call time so they follow the language.
+const words = () => t.paywall;
+
 /**
- * The always-visible 3.1.2(c) disclosure, from the prices StoreKit returned.
- * `trial` is "3 days free" or null.
+ * The always-visible 3.1.2(c) disclosure, from the prices StoreKit returned
+ * (its own price strings, in the store's currency and format).
+ * `trialLength` is "3 days" (trialLength above) or null when no trial applies.
  */
-export function disclosureText(p: { weekly?: string | null; yearly?: string | null; lifetime?: string | null; trial?: string | null }): string {
+export function disclosureText(p: { weekly?: string | null; yearly?: string | null; lifetime?: string | null; trialLength?: string | null }): string {
+  const o = t.offer;
   const parts: string[] = [];
-  if (p.yearly) parts.push(`Yearly ${p.yearly}/year is an auto-renewing subscription billed once a year until cancelled.`);
-  if (p.weekly)
-    parts.push(
-      `Weekly ${p.weekly}/week is an auto-renewing subscription billed once a week until cancelled${
-        p.trial ? `; it starts with ${p.trial} and you are not charged until the trial ends` : ''
-      }.`
-    );
-  if (p.lifetime) parts.push(`Lifetime ${p.lifetime} is a one-time purchase, not a subscription.`);
-  const head = parts.length > 0 ? parts.join(' ') : 'Pro is offered as a weekly or yearly auto-renewing subscription, or a one-time lifetime purchase.';
-  return `${head} Payment is charged to your Apple ID. Cancel a subscription anytime in your Apple ID settings at least 24 hours before the period ends.`;
+  if (p.yearly) parts.push(o.yearly(p.yearly));
+  if (p.weekly) parts.push(o.weekly(p.weekly, p.trialLength ?? null));
+  if (p.lifetime) parts.push(o.lifetime(p.lifetime));
+  const head = parts.length > 0 ? parts.join(' ') : o.noPrices;
+  return `${head} ${o.billing}`;
 }

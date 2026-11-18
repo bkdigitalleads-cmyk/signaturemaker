@@ -13,6 +13,7 @@ import { kvGet, kvSet, sweepCache } from './src/store';
 import { afterOnboardingPaywall, firstTabFor } from './src/rules';
 import { maybeRequestReview, maybeRequestReviewOnLaunch } from './src/reviews';
 import { PRIVACY_URL } from './src/links';
+import { t } from './src/i18n';
 import Create from './src/screens/Create';
 import Library from './src/screens/Library';
 import Export from './src/screens/Export';
@@ -95,13 +96,13 @@ function Shell() {
           setOver({ name: 'sign', doc });
         };
         if (overRef.current?.name === 'sign') {
-          Alert.alert(`Open “${doc.name}”?`, 'What you placed on the document that is open now is not saved.', [
-            { text: 'Keep this one', style: 'cancel' },
-            { text: 'Open', onPress: go },
+          Alert.alert(t.app.openOther(doc.name), t.app.openOtherBody, [
+            { text: t.app.keepThisOne, style: 'cancel' },
+            { text: t.common.open, onPress: go },
           ]);
         } else go();
       } catch (e: any) {
-        Alert.alert('That file did not open', e?.message ?? 'Try another copy of it.');
+        Alert.alert(t.common.fileDidNotOpen, e?.message ?? t.common.tryAnotherCopy);
       }
     };
     Linking.getInitialURL().then(handle).catch(() => {});
@@ -134,7 +135,7 @@ function Shell() {
         onClose={() => setOver(null)}
         onSaved={() => {
           setOver(null);
-          say('Initials saved with the signature.');
+          say(t.app.initialsSaved);
         }}
       />
     );
@@ -142,7 +143,7 @@ function Shell() {
     body = (
       <Create
         onSaved={(sig) => {
-          say('Saved to your library.');
+          say(t.app.savedToLibrary);
           setTab('library');
           setOver({ name: 'export', sig });
         }}
@@ -170,12 +171,12 @@ function Shell() {
       <PaywallModal privacyUrl={PRIVACY_URL} />
       <Drawer theme={theme} visible={claim} onClose={() => setClaim(false)}>
         <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header">
-          Your first export and first signed document are free.
+          {t.app.claimTitle}
         </Text>
-        <Text style={[type.body, { color: theme.inkSoft, marginTop: space.s, marginBottom: space.xl }]}>Neither carries a mark. Making and saving signatures stays free.</Text>
+        <Text style={[type.body, { color: theme.inkSoft, marginTop: space.s, marginBottom: space.xl }]}>{t.app.claimBody}</Text>
         <InkButton
           theme={theme}
-          label="Claim"
+          label={t.app.claim}
           onPress={() => {
             setClaim(false);
             maybeRequestReview('claimFree');
@@ -197,8 +198,8 @@ class Guard extends React.Component<{ children: React.ReactNode }, { error: Erro
     if (!error) return this.props.children;
     return (
       <View style={{ flex: 1, backgroundColor: '#F4F1EA', padding: space.l, paddingTop: 80 }}>
-        <Text style={[type.title, { color: '#1A1917' }]}>Something went wrong on this screen.</Text>
-        <Text style={[type.body, { color: '#1A1917', marginTop: space.s }]}>Close the app and open it again. Your signatures and documents are saved.</Text>
+        <Text style={[type.title, { color: '#1A1917' }]}>{t.app.crashTitle}</Text>
+        <Text style={[type.body, { color: '#1A1917', marginTop: space.s }]}>{t.app.crashBody}</Text>
         <Text style={{ fontSize: 12, color: '#8A867F', marginTop: space.l }}>{error.message}</Text>
       </View>
     );

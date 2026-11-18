@@ -14,6 +14,7 @@
  */
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import { t } from './i18n';
 import { flattenPdf, FlatItem, imageToPdf, readPages, signedName } from './flatten';
 import type { PageBox, Placement } from './placement';
 import { normalizePhoto, composePhoto, PhotoStamp } from './render';
@@ -53,14 +54,14 @@ async function fromPdf(uri: string, name: string): Promise<OpenDoc> {
   const copy = workingCopy(uri, name);
   const pdf = readBytes(copy.uri);
   const pages = await readPages(pdf);
-  if (pages.length === 0) throw new Error('This PDF has no pages.');
+  if (pages.length === 0) throw new Error(t.errors.noPages);
   return { id: newId(Date.now()), name, kind: 'pdf', uri: copy.uri, pdf, pages };
 }
 
 async function fromImage(uri: string, name: string): Promise<OpenDoc> {
   const copy = workingCopy(uri, name);
   const photo = await normalizePhoto(copy.uri);
-  if (!photo) throw new Error('This image could not be read.');
+  if (!photo) throw new Error(t.errors.unreadableImage);
   const pdf = await imageToPdf({ bytes: b64ToBytes(photo.base64), format: 'jpg', width: photo.width, height: photo.height });
   const pages = await readPages(pdf);
   return { id: newId(Date.now()), name, kind: 'photo', uri: copy.uri, pdf, pages, photo };
@@ -127,7 +128,7 @@ export async function finishDocument(
       } else if (p.text) stamps.push({ text: p.text, x: p.x, y: p.y, width: p.width, height: p.height });
     }
     const jpg = await composePhoto(doc.photo.base64, doc.photo.width, doc.photo.height, k, stamps, opts.watermark);
-    if (!jpg) throw new Error('The image could not be written.');
+    if (!jpg) throw new Error(t.errors.unwritableImage);
     uri = writeSigned(id, name, jpg);
   } else {
     const items: FlatItem[] = [];

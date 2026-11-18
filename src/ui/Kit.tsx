@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MAIN_BUTTON, Theme, radius, space, type } from '../theme';
 import Glyph, { GlyphName } from './Glyph';
 import { MODAL_ANIMATION } from './motion';
+import { t } from '../i18n';
 
 export function Tap({
   style,
@@ -165,7 +166,7 @@ export function Pill({
     <Tap
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={locked ? `${label}, Pro` : label}
+      accessibilityLabel={locked ? t.common.withPro(label) : label}
       accessibilityState={{ selected: on }}
       style={[styles.pill, { backgroundColor: on ? theme.picked : theme.surface, borderColor: on ? theme.pickedEdge : theme.edge }]}
       pressedStyle={{ backgroundColor: theme.raised }}
@@ -262,7 +263,7 @@ export function Field({ theme, style, ...rest }: TextInputProps & { theme: Theme
 export function TopBar({ theme, title, onBack, closeGlyph = 'back', right }: { theme: Theme; title?: string; onBack?: () => void; closeGlyph?: GlyphName; right?: React.ReactNode }) {
   return (
     <View style={styles.topBar}>
-      <View style={styles.topSide}>{onBack ? <GlyphButton theme={theme} glyph={closeGlyph} label={closeGlyph === 'close' ? 'Close' : 'Back'} onPress={onBack} /> : null}</View>
+      <View style={styles.topSide}>{onBack ? <GlyphButton theme={theme} glyph={closeGlyph} label={closeGlyph === 'close' ? t.common.close : t.common.back} onPress={onBack} /> : null}</View>
       {title ? (
         <Text style={[type.strong, styles.topTitle, { color: theme.ink }]} numberOfLines={1} accessibilityRole="header" maxFontSizeMultiplier={1.3}>
           {title}
@@ -296,13 +297,13 @@ export function Drawer({ theme, visible, onClose, children, title }: { theme: Th
   return (
     <Modal visible={visible} transparent animationType={MODAL_ANIMATION} onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: theme.scrim }]} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button" />
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: theme.scrim }]} onPress={onClose} accessibilityLabel={t.common.close} accessibilityRole="button" />
         <View style={[styles.drawer, { backgroundColor: theme.bg, borderColor: theme.edge, paddingBottom: Math.max(insets.bottom, space.l) }]}>
           <View style={styles.drawerHead}>
             <Text style={[type.strong, { color: theme.ink, flex: 1 }]} accessibilityRole="header">
               {title ?? ''}
             </Text>
-            <GlyphButton theme={theme} glyph="close" label="Close" onPress={onClose} />
+            <GlyphButton theme={theme} glyph="close" label={t.common.close} onPress={onClose} />
           </View>
           {children}
         </View>

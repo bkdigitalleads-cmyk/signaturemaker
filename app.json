@@ -3,7 +3,7 @@
     "name": "Signature Maker",
     "slug": "signaturemaker",
     "scheme": "signaturemaker",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.bwk.signaturemaker",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationCategoryType": "public.app-category.productivity",
@@ -37,6 +37,12 @@
           }
         ]
       }
+    },
+    "locales": {
+      "de": "./assets/locales/de.json",
+      "fr": "./assets/locales/fr.json",
+      "es": "./assets/locales/es.json",
+      "it": "./assets/locales/it.json"
     },
     "android": {
       "package": "com.bwk.signaturemaker",
@@ -78,6 +84,20 @@
           "photosPermission": false,
           "savePhotosPermission": "Signature Maker saves your signature image to Photos when you tap Save to Photos. It never reads your library.",
           "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "en",
+              "de",
+              "fr",
+              "es",
+              "it"
+            ]
+          }
         }
       ],
       "./plugins/withoutPushEntitlement"

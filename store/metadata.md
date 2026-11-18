@@ -1,4 +1,4 @@
-# Signature Maker, App Store metadata (1.0.2)
+# Signature Maker, App Store metadata (1.0.3)
 
 Everything here is pasted into App Store Connect by Brian and Cowork. No em dashes anywhere, no brand words (no other signing products or PDF software), no "Unlock", "Premium", "Seamless", "Effortless", "Welcome", "Let's", "Professional-grade" or exclamation marks.
 
@@ -77,6 +77,15 @@ Free: drawing, typing and saving as many signatures as you like, your library, a
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://bkdigitalleads-cmyk.github.io/signaturemaker/privacy.html
+
+## What's New (1.0.3)
+The app's own text is now in five languages. Each locale in App Store Connect gets its line; the German, French, Spanish and Italian locales need adding there if they are not set up yet (the rest of their listing can stay English for now). Spanish (Mexico) uses the Spanish line.
+
+- English (U.S.): Signature Maker is now available in German, French, Spanish and Italian.
+- German: Signature Maker gibt es jetzt auch auf Deutsch, Französisch, Spanisch und Italienisch.
+- French: Signature Maker est désormais disponible en allemand, français, espagnol et italien.
+- Spanish (Spain and Mexico): Signature Maker ya está disponible en alemán, francés, español e italiano.
+- Italian: Signature Maker è ora disponibile in tedesco, francese, spagnolo e italiano.
 
 ## What's New (1.0.2)
 Small fixes and improvements.

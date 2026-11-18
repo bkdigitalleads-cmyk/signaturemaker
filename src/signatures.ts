@@ -7,6 +7,7 @@ import { renderLibraryPng } from './render';
 import { writeLibraryPng } from './store';
 import { addSignature, Art, inkHex, InkId, Mark, newId, Signature, suggestName, updateSignature } from './library';
 import { compactStroke } from './stroke';
+import { t } from './i18n';
 
 function compactArt(art: Art): Art {
   return art.kind === 'drawn' ? { kind: 'drawn', strokes: art.strokes.map(compactStroke) } : { kind: 'typed', text: art.text.trim(), fontId: art.fontId };
@@ -15,7 +16,7 @@ function compactArt(art: Art): Art {
 async function makeMark(art: Art, ink: InkId, fileId: string): Promise<Mark> {
   const clean = compactArt(art);
   const r = await renderLibraryPng(clean, inkHex(ink));
-  if (!r) throw new Error('There is no ink to save yet.');
+  if (!r) throw new Error(t.errors.noInk);
   const png = `${fileId}.png`;
   writeLibraryPng(png, r.base64);
   return { art: clean, png, crop: r.crop };

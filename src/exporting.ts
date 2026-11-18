@@ -8,6 +8,7 @@ import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library/legacy';
 import { shareFile } from './store';
+import { t } from './i18n';
 
 export type Kind = 'png' | 'jpg' | 'pdf';
 
@@ -19,7 +20,7 @@ const MIME: Record<Kind, { mimeType: string; UTI: string }> = {
 
 /** Opens the share sheet for a file already on disk. Resolves when the sheet closes. */
 export async function shareUri(uri: string, kind: Kind, title: string): Promise<void> {
-  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this phone.');
+  if (!(await Sharing.isAvailableAsync())) throw new Error(t.errors.noSharing);
   await Sharing.shareAsync(uri, { ...MIME[kind], dialogTitle: title });
 }
 

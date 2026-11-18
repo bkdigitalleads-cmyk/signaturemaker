@@ -5,14 +5,38 @@
  * Nothing syncs and nothing leaves the phone.
  */
 import type { Stroke, Rect } from './stroke.ts';
+import { t } from './i18n.ts';
 
 export type InkId = 'black' | 'navy' | 'blue' | 'red';
 
-export const INKS: { id: InkId; label: string; hex: string }[] = [
-  { id: 'black', label: 'Black', hex: '#17171B' },
-  { id: 'navy', label: 'Navy', hex: '#1E2A4F' },
-  { id: 'blue', label: 'Blue', hex: '#1F4FB4' },
-  { id: 'red', label: 'Red', hex: '#B02A22' },
+export interface InkInfo {
+  id: InkId;
+  /** "Blue", in the app's language. */
+  readonly label: string;
+  /** "blue ink", in the app's language (for names and VoiceOver). */
+  readonly phrase: string;
+  hex: string;
+}
+
+/** An ink whose words are read from the dictionary when used, so they follow the language. */
+function ink(id: InkId, hex: string): InkInfo {
+  return {
+    id,
+    hex,
+    get label() {
+      return t.inks[id].label;
+    },
+    get phrase() {
+      return t.inks[id].phrase;
+    },
+  };
+}
+
+export const INKS: InkInfo[] = [
+  ink('black', '#17171B'),
+  ink('navy', '#1E2A4F'),
+  ink('blue', '#1F4FB4'),
+  ink('red', '#B02A22'),
 ];
 
 export function inkHex(id: InkId | string | undefined): string {
@@ -58,10 +82,10 @@ export function aspectOf(m: Mark): number {
   return m.crop.height > 0 ? m.crop.width / m.crop.height : 3;
 }
 
-/** A name for a new signature: "Signature, blue ink", or the typed words. */
+/** A name for a new signature: "Signature, blue ink", or the typed words (in the app's language when it is made). */
 export function suggestName(art: Art, ink: InkId, existing: Signature[]): string {
-  const inkWord = `${(INKS.find((i) => i.id === ink) ?? INKS[0]).label.toLowerCase()} ink`;
-  const head = art.kind === 'typed' && art.text.trim() ? art.text.trim().split(/\s+/)[0] : 'Signature';
+  const inkWord = (INKS.find((i) => i.id === ink) ?? INKS[0]).phrase;
+  const head = art.kind === 'typed' && art.text.trim() ? art.text.trim().split(/\s+/)[0] : t.inks.signature;
   let name = `${head}, ${inkWord}`;
   const names = new Set(existing.map((s) => s.name));
   for (let n = 2; names.has(name); n++) name = `${head} ${n}, ${inkWord}`;

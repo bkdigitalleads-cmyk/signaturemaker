@@ -13,6 +13,7 @@ import PenRow from '../ui/PenRow';
 import Glyph from '../ui/Glyph';
 import { Field, GlyphButton, InkButton, Pill, Tap, Title, TopBar } from '../ui/Kit';
 import { MODAL_ANIMATION, savedHaptic, tick } from '../ui/motion';
+import { t } from '../i18n';
 
 /**
  * The hero. Draw on a sheet of paper (four pens, four inks, three
@@ -108,13 +109,13 @@ export default function Create({
         onSaved(sig);
       }
     } catch (e: any) {
-      Alert.alert('That did not save', e?.message ?? 'Try once more.');
+      Alert.alert(t.common.didNotSave, e?.message ?? t.common.tryAgain);
     } finally {
       setSaving(false);
     }
   };
 
-  const title = initials ? 'Your initials' : 'Sign here';
+  const title = initials ? t.create.yourInitials : t.create.signHere;
 
   return (
     <View style={{ flex: 1 }}>
@@ -122,24 +123,24 @@ export default function Create({
       <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: onClose ? space.s : space.l }]} keyboardShouldPersistTaps="handled" scrollEnabled={mode === 'type'}>
         <View style={styles.head}>
           <Title theme={theme}>{title}</Title>
-          {onboarding ? <Text style={[type.body, { color: theme.inkSoft }]}>Sign once and it is saved for every document.</Text> : null}
+          {onboarding ? <Text style={[type.body, { color: theme.inkSoft }]}>{t.create.signOnce}</Text> : null}
           <View style={styles.modes}>
-            <Pill theme={theme} label="Draw" on={mode === 'draw'} onPress={() => setMode('draw')} />
-            <Pill theme={theme} label="Type instead" on={mode === 'type'} onPress={() => setMode('type')} />
+            <Pill theme={theme} label={t.create.draw} on={mode === 'draw'} onPress={() => setMode('draw')} />
+            <Pill theme={theme} label={t.create.typeInstead} on={mode === 'type'} onPress={() => setMode('type')} />
           </View>
         </View>
 
         {mode === 'draw' ? (
           <>
-            <Pad theme={theme} width={padW} height={padH} strokes={strokes} onStroke={addStroke} pen={prefs.pen} size={prefs.size} inkHex={inkHex(ink)} placeholder={initials ? 'Draw your initials' : undefined} />
+            <Pad theme={theme} width={padW} height={padH} strokes={strokes} onStroke={addStroke} pen={prefs.pen} size={prefs.size} inkHex={inkHex(ink)} placeholder={initials ? t.create.drawInitials : undefined} />
             <View style={styles.tools}>
-              <GlyphButton theme={theme} glyph="undo" label="Undo" onPress={undo} disabled={strokes.length === 0} />
-              <GlyphButton theme={theme} glyph="redo" label="Redo" onPress={redo} disabled={undone.length === 0} />
-              <GlyphButton theme={theme} glyph="clear" label="Clear" onPress={clear} disabled={strokes.length === 0} />
+              <GlyphButton theme={theme} glyph="undo" label={t.create.undo} onPress={undo} disabled={strokes.length === 0} />
+              <GlyphButton theme={theme} glyph="redo" label={t.create.redo} onPress={redo} disabled={undone.length === 0} />
+              <GlyphButton theme={theme} glyph="clear" label={t.create.clear} onPress={clear} disabled={strokes.length === 0} />
               <View style={{ flex: 1 }} />
-              <Tap onPress={() => setWide(true)} style={styles.wideBtn} accessibilityRole="button" accessibilityLabel="Wide mode" accessibilityHint="Turns the pad sideways so a long signature fits">
+              <Tap onPress={() => setWide(true)} style={styles.wideBtn} accessibilityRole="button" accessibilityLabel={t.create.wideMode} accessibilityHint={t.create.wideHint}>
                 <Glyph name="wide" size={20} color={theme.ink} />
-                <Text style={[type.small, { color: theme.ink }]}>Wide</Text>
+                <Text style={[type.small, { color: theme.ink }]}>{t.create.wide}</Text>
               </Tap>
             </View>
             <PenRow
@@ -159,10 +160,10 @@ export default function Create({
         )}
       </ScrollView>
       <View style={styles.footer}>
-        <InkButton theme={theme} label={onboarding ? 'Continue' : initials ? 'Save initials' : 'Save signature'} onPress={save} disabled={!art} busy={saving} hint={art ? undefined : mode === 'draw' ? 'Draw on the pad first' : 'Type a name first'} />
+        <InkButton theme={theme} label={onboarding ? t.common.continue : initials ? t.create.saveInitials : t.create.saveSignature} onPress={save} disabled={!art} busy={saving} hint={art ? undefined : mode === 'draw' ? t.create.drawFirst : t.create.typeFirst} />
         {onboarding && onSkip ? (
-          <Tap onPress={onSkip} style={styles.skip} accessibilityRole="button" accessibilityLabel="Skip for now">
-            <Text style={[type.body, { color: theme.inkSoft }]}>Skip for now</Text>
+          <Tap onPress={onSkip} style={styles.skip} accessibilityRole="button" accessibilityLabel={t.create.skip}>
+            <Text style={[type.body, { color: theme.inkSoft }]}>{t.create.skip}</Text>
           </Tap>
         ) : null}
       </View>
@@ -212,11 +213,11 @@ function TypePanel({
   freeOnly?: boolean;
 }) {
   const f = fontById(fontId);
-  const shown = text.trim() || (initials ? 'BWK' : 'Your name');
+  const shown = text.trim() || (initials ? 'BWK' : t.create.yourName);
   return (
     <View style={{ gap: space.l }}>
-      <Field theme={theme} value={text} onChangeText={onText} placeholder={initials ? 'Your initials' : 'Your name'} autoCapitalize="words" autoCorrect={false} returnKeyType="done" maxLength={60} accessibilityLabel={initials ? 'Your initials' : 'Your name'} />
-      <View style={[styles.preview, { width, backgroundColor: theme.paper, borderColor: theme.edge }]} accessible accessibilityLabel={`${shown} in ${f.name}`}>
+      <Field theme={theme} value={text} onChangeText={onText} placeholder={initials ? t.create.yourInitials : t.create.yourName} autoCapitalize="words" autoCorrect={false} returnKeyType="done" maxLength={60} accessibilityLabel={initials ? t.create.yourInitials : t.create.yourName} />
+      <View style={[styles.preview, { width, backgroundColor: theme.paper, borderColor: theme.edge }]} accessible accessibilityLabel={t.create.inFont(shown, f.name)}>
         <Text style={{ fontFamily: f.family, fontSize: 46 * f.scale, color: inkHex(ink), opacity: text.trim() ? 1 : 0.35 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.4} allowFontScaling={false}>
           {shown}
         </Text>
@@ -224,7 +225,7 @@ function TypePanel({
       </View>
       {/* Initials take their signature's ink, so the inks show only for a new signature. */}
       {initials ? null : (
-      <View style={styles.inkRow} accessibilityRole="radiogroup" accessibilityLabel="Ink color">
+      <View style={styles.inkRow} accessibilityRole="radiogroup" accessibilityLabel={t.create.inkColor}>
         {INKS.map((i) => (
           <Tap
             key={i.id}
@@ -232,14 +233,14 @@ function TypePanel({
             style={[styles.dotWrap, { borderColor: i.id === ink ? theme.ink : 'transparent' }]}
             accessibilityRole="radio"
             accessibilityState={{ selected: i.id === ink }}
-            accessibilityLabel={`${i.label} ink`}
+            accessibilityLabel={`${i.phrase[0].toUpperCase()}${i.phrase.slice(1)}`}
           >
             <View style={[styles.dot, { backgroundColor: i.hex }]} />
           </Tap>
         ))}
       </View>
       )}
-      <View style={[styles.fonts, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="radiogroup" accessibilityLabel="Font">
+      <View style={[styles.fonts, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="radiogroup" accessibilityLabel={t.create.font}>
         {SCRIPT_FONTS.filter((font) => !freeOnly || font.free).map((font, i) => {
           const on = font.id === fontId;
           const locked = !canUseFont(font.id, isPro);
@@ -251,7 +252,7 @@ function TypePanel({
               pressedStyle={{ backgroundColor: theme.raised }}
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
-              accessibilityLabel={`${font.name}${locked ? ', Pro' : ''}`}
+              accessibilityLabel={locked ? t.common.withPro(font.name) : font.name}
             >
               <Text style={{ flex: 1, fontFamily: font.family, fontSize: 30 * font.scale, color: theme.ink }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} allowFontScaling={false}>
                 {shown}
@@ -310,7 +311,7 @@ function WidePad({
   }
   if (!visible && opened) setOpened(false);
   const done = () => onDone(fitStrokes(scaleStrokes(local, 1 / k), normal.width, normal.height));
-  const placeholder = useMemo(() => 'Turn the phone and sign along the line', []);
+  const placeholder = useMemo(() => t.create.turnPhone, []);
   return (
     <Modal visible={visible} animationType={MODAL_ANIMATION} presentationStyle="fullScreen" onRequestClose={done} supportedOrientations={['portrait']}>
       <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -328,11 +329,11 @@ function WidePad({
           }}
         >
           <View style={styles.wideBar}>
-            <GlyphButton theme={theme} glyph="undo" label="Undo" onPress={() => setLocal(local.slice(0, -1))} disabled={local.length === 0} />
-            <GlyphButton theme={theme} glyph="clear" label="Clear" onPress={() => setLocal([])} disabled={local.length === 0} />
+            <GlyphButton theme={theme} glyph="undo" label={t.create.undo} onPress={() => setLocal(local.slice(0, -1))} disabled={local.length === 0} />
+            <GlyphButton theme={theme} glyph="clear" label={t.create.clear} onPress={() => setLocal([])} disabled={local.length === 0} />
             <View style={{ flex: 1 }} />
-            <Tap onPress={done} style={[styles.wideDone, { backgroundColor: theme.accent }]} accessibilityRole="button" accessibilityLabel="Done">
-              <Text style={[type.strong, { color: theme.onAccent }]}>Done</Text>
+            <Tap onPress={done} style={[styles.wideDone, { backgroundColor: theme.accent }]} accessibilityRole="button" accessibilityLabel={t.common.done}>
+              <Text style={[type.strong, { color: theme.onAccent }]}>{t.common.done}</Text>
             </Tap>
           </View>
           <Pad theme={theme} width={padW} height={padH} strokes={local} onStroke={(s) => setLocal((l) => [...l, s])} pen={pen} size={size} inkHex={ink} placeholder={placeholder} baseline={0.68} />

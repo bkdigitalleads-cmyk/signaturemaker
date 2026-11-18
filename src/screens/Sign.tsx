@@ -43,6 +43,7 @@ import { MODAL_ANIMATION, placeHaptic, savedHaptic, tick } from '../ui/motion';
 import Create from './Create';
 import PaywallModal from './Paywall';
 import { PRIVACY_URL } from '../links';
+import { t } from '../i18n';
 
 let seq = 0;
 const pid = () => `p${Date.now().toString(36)}${(seq++).toString(36)}`;
@@ -135,7 +136,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
       return setPicker(stamp);
     }
     if (stamp === 'date') place('date', { text: shortDate(Date.now()) });
-    else place('text', { text: prefs.typedName || 'Your name' });
+    else place('text', { text: prefs.typedName || t.sign.yourName });
   };
 
   // ---------- touch: one responder over the page ----------
@@ -293,7 +294,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
       savedHaptic();
       setResult(out);
     } catch (e: any) {
-      Alert.alert('That did not save', e?.message ?? 'Try once more.');
+      Alert.alert(t.common.didNotSave, e?.message ?? t.common.tryAgain);
     } finally {
       setBusy(false);
     }
@@ -308,9 +309,9 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
 
   const close = () => {
     if (placements.length === 0 || result) return onClose();
-    Alert.alert('Leave without saving?', 'The original document is not changed either way.', [
-      { text: 'Keep signing', style: 'cancel' },
-      { text: 'Leave', style: 'destructive', onPress: onClose },
+    Alert.alert(t.sign.leaveTitle, t.sign.leaveBody, [
+      { text: t.sign.keepSigning, style: 'cancel' },
+      { text: t.sign.leave, style: 'destructive', onPress: onClose },
     ]);
   };
 
@@ -330,8 +331,8 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
         closeGlyph="close"
         right={
           doc.pages.length > 1 ? (
-            <Text style={[type.small, { color: theme.inkSoft, marginRight: space.s }]} accessibilityLabel={`Page ${page + 1} of ${doc.pages.length}`}>
-              {page + 1} of {doc.pages.length}
+            <Text style={[type.small, { color: theme.inkSoft, marginRight: space.s }]} accessibilityLabel={t.common.pageOf(page + 1, doc.pages.length)}>
+              {t.sign.pageCount(page + 1, doc.pages.length)}
             </Text>
           ) : null
         }
@@ -363,9 +364,9 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
           </View>
         ) : null}
         {frame.zoom > 1 && !live ? (
-          <Tap onPress={() => { tick(); fitPage(); }} onLayout={(e) => setFitPill(e.nativeEvent.layout)} style={[styles.fitBtn, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="button" accessibilityLabel="Show the whole page" accessibilityHint="Pinch or double tap the page to zoom in again">
+          <Tap onPress={() => { tick(); fitPage(); }} onLayout={(e) => setFitPill(e.nativeEvent.layout)} style={[styles.fitBtn, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="button" accessibilityLabel={t.sign.wholePageA11y} accessibilityHint={t.sign.wholePageHint}>
             <Text style={[type.small, { color: theme.ink }]} maxFontSizeMultiplier={1.3}>
-              Whole page
+              {t.sign.wholePage}
             </Text>
           </Tap>
         ) : null}
@@ -377,28 +378,28 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
 
       <View style={[styles.bottom, { borderTopColor: theme.edge, paddingBottom: Math.max(insets.bottom, space.m) }]}>
         {sel && (sel.kind === 'date' || sel.kind === 'text') ? (
-          <Field theme={theme} value={sel.text ?? ''} onChangeText={(t) => update(sel.id, (x) => ({ ...x, text: t }))} placeholder={sel.kind === 'date' ? 'Date' : 'Text'} accessibilityLabel={sel.kind === 'date' ? 'Date on the page' : 'Text on the page'} returnKeyType="done" />
+          <Field theme={theme} value={sel.text ?? ''} onChangeText={(v) => update(sel.id, (x) => ({ ...x, text: v }))} placeholder={sel.kind === 'date' ? t.sign.dateField : t.sign.textField} accessibilityLabel={sel.kind === 'date' ? t.sign.dateA11y : t.sign.textA11y} returnKeyType="done" />
         ) : null}
         <View style={styles.tools}>
-          <Tool theme={theme} glyph="create" label="Add signature" short="Signature" onPress={() => addStamp('signature')} />
-          <Tool theme={theme} glyph="initials" label="Add initials" short="Initials" locked={!canUseStamp('initials', isPro)} onPress={() => addStamp('initials')} />
-          <Tool theme={theme} glyph="date" label="Add date" short="Date" locked={!canUseStamp('date', isPro)} onPress={() => addStamp('date')} />
-          <Tool theme={theme} glyph="text" label="Add text" short="Text" locked={!canUseStamp('text', isPro)} onPress={() => addStamp('text')} />
+          <Tool theme={theme} glyph="create" label={t.sign.addSignature} short={t.sign.toolSignature} onPress={() => addStamp('signature')} />
+          <Tool theme={theme} glyph="initials" label={t.sign.addInitials} short={t.sign.toolInitials} locked={!canUseStamp('initials', isPro)} onPress={() => addStamp('initials')} />
+          <Tool theme={theme} glyph="date" label={t.sign.addDate} short={t.sign.toolDate} locked={!canUseStamp('date', isPro)} onPress={() => addStamp('date')} />
+          <Tool theme={theme} glyph="text" label={t.sign.addText} short={t.sign.toolText} locked={!canUseStamp('text', isPro)} onPress={() => addStamp('text')} />
         </View>
         <View style={styles.doneRow}>
           {doc.pages.length > 1 ? (
             <View style={styles.pager}>
-              <GlyphButton theme={theme} glyph="back" label="Previous page" onPress={() => { tick(); setSelected(null); fitPage(); setPage(Math.max(0, page - 1)); }} disabled={page === 0} filled />
-              <GlyphButton theme={theme} glyph="chevron" label="Next page" onPress={() => { tick(); setSelected(null); fitPage(); setPage(Math.min(doc.pages.length - 1, page + 1)); }} disabled={page === doc.pages.length - 1} filled />
+              <GlyphButton theme={theme} glyph="back" label={t.sign.previousPage} onPress={() => { tick(); setSelected(null); fitPage(); setPage(Math.max(0, page - 1)); }} disabled={page === 0} filled />
+              <GlyphButton theme={theme} glyph="chevron" label={t.sign.nextPage} onPress={() => { tick(); setSelected(null); fitPage(); setPage(Math.min(doc.pages.length - 1, page + 1)); }} disabled={page === doc.pages.length - 1} filled />
             </View>
           ) : null}
           <View style={{ flex: 1 }}>
-            <InkButton theme={theme} label="Done signing" onPress={done} disabled={placements.length === 0} busy={busy} hint={placements.length === 0 ? 'Add a signature first' : 'Saves a signed copy. The original stays as it is.'} />
+            <InkButton theme={theme} label={t.sign.doneSigning} onPress={done} disabled={placements.length === 0} busy={busy} hint={placements.length === 0 ? t.sign.addFirst : t.sign.doneHint} />
           </View>
         </View>
       </View>
 
-      <Drawer theme={theme} visible={picker != null} onClose={() => setPicker(null)} title={picker === 'initials' ? 'Add initials' : 'Add signature'}>
+      <Drawer theme={theme} visible={picker != null} onClose={() => setPicker(null)} title={picker === 'initials' ? t.sign.addInitials : t.sign.addSignature}>
         <ScrollView style={{ maxHeight: 420 }}>
           <Panel theme={theme} style={{ marginBottom: space.m }}>
             {[...library]
@@ -415,7 +416,7 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
                   style={[styles.pick, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.rule }, s.isDefault && { backgroundColor: theme.picked }]}
                   pressedStyle={{ backgroundColor: theme.raised }}
                   accessibilityRole="button"
-                  accessibilityLabel={`${s.name}${s.isDefault ? ', default' : ''}`}
+                  accessibilityLabel={s.isDefault ? t.sign.pickDefault(s.name) : s.name}
                 >
                   <View style={[styles.pickPaper, { backgroundColor: theme.paper }]}>
                     <MarkView mark={picker === 'initials' && s.initials ? s.initials : s.main} height={40} maxWidth={150} />
@@ -423,11 +424,11 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
                   <Text style={[type.body, { color: theme.ink, flex: 1 }]} numberOfLines={1}>
                     {s.name}
                   </Text>
-                  {s.isDefault ? <Caption theme={theme}>Default</Caption> : null}
+                  {s.isDefault ? <Caption theme={theme}>{t.common.default}</Caption> : null}
                 </Tap>
               ))}
           </Panel>
-          <QuietButton theme={theme} glyph="plus" label={picker === 'initials' ? 'Make initials' : 'New signature'} onPress={() => {
+          <QuietButton theme={theme} glyph="plus" label={picker === 'initials' ? t.sign.makeInitials : t.sign.newSignature} onPress={() => {
             const k = picker;
             setPicker(null);
             setTimeout(() => setCreating(k === 'initials' ? { initialsFor: defaultSignature(library)! } : {}), 400);
@@ -435,10 +436,10 @@ export default function Sign({ doc, onClose }: { doc: OpenDoc; onClose: () => vo
         </ScrollView>
       </Drawer>
 
-      <Drawer theme={theme} visible={askFormat} onClose={() => setAskFormat(false)} title="Save the signed photo as">
+      <Drawer theme={theme} visible={askFormat} onClose={() => setAskFormat(false)} title={t.sign.saveAs}>
         <Panel theme={theme} style={{ marginBottom: space.l }}>
-          <Row theme={theme} first glyph="documents" label="PDF" sub="Best for sending back" onPress={() => finish('pdf')} />
-          <Row theme={theme} glyph="photo" label="JPG" sub="An image, like the photo" onPress={() => finish('jpg')} />
+          <Row theme={theme} first glyph="documents" label="PDF" sub={t.sign.pdfSub} onPress={() => finish('pdf')} />
+          <Row theme={theme} glyph="photo" label="JPG" sub={t.sign.jpgSub} onPress={() => finish('jpg')} />
         </Panel>
       </Drawer>
 
@@ -476,9 +477,9 @@ function EditPill({ theme, p, frame, area, avoid, onStep, onRemove }: { theme: T
   if (!at) return null;
   return (
     <View style={[styles.editPill, { left: at.x, top: at.y, width: PILL.width, height: PILL.height, backgroundColor: theme.surface, borderColor: theme.edge }]}>
-      <GlyphButton theme={theme} glyph="minus" label={`Make the ${p.kind} smaller`} onPress={() => onStep(1 / 1.15)} />
-      <GlyphButton theme={theme} glyph="plus" label={`Make the ${p.kind} bigger`} onPress={() => onStep(1.15)} />
-      <GlyphButton theme={theme} glyph="trash" label={`Remove the selected ${p.kind}`} onPress={onRemove} />
+      <GlyphButton theme={theme} glyph="minus" label={t.sign.smaller[p.kind]} onPress={() => onStep(1 / 1.15)} />
+      <GlyphButton theme={theme} glyph="plus" label={t.sign.bigger[p.kind]} onPress={() => onStep(1.15)} />
+      <GlyphButton theme={theme} glyph="trash" label={t.sign.removeSelected[p.kind]} onPress={onRemove} />
     </View>
   );
 }
@@ -491,7 +492,7 @@ function Tool({ theme, glyph, label, short, onPress, locked = false }: { theme: 
       style={[styles.tool, { backgroundColor: theme.surface, borderColor: theme.edge }]}
       pressedStyle={{ backgroundColor: theme.raised }}
       accessibilityRole="button"
-      accessibilityLabel={locked ? `${label}, Pro` : label}
+      accessibilityLabel={locked ? t.common.withPro(label) : label}
     >
       <Glyph name={glyph} size={22} color={theme.ink} />
       <View style={styles.toolLabel}>
@@ -510,14 +511,14 @@ function Placed({ theme, p, scale, selected, library, onAction }: { theme: Theme
   const mark = p.kind === 'initials' ? sig?.initials : p.kind === 'signature' ? sig?.main : undefined;
   const w = p.width * scale;
   const h = p.height * scale;
-  const label = p.kind === 'signature' ? 'Signature' : p.kind === 'initials' ? 'Initials' : p.kind === 'date' ? `Date, ${p.text}` : `Text, ${p.text}`;
+  const label = p.kind === 'signature' ? t.sign.placedSignature : p.kind === 'initials' ? t.sign.placedInitials : p.kind === 'date' ? t.sign.placedDate(p.text ?? '') : t.sign.placedText(p.text ?? '');
   return (
     <View
       style={{ position: 'absolute', left: p.x * scale, top: p.y * scale, width: w, height: h }}
       accessible
       accessibilityLabel={label}
-      accessibilityHint="Drag to move. Pull the corner to resize, or use the smaller and bigger buttons."
-      accessibilityActions={[{ name: 'bigger', label: 'Make bigger' }, { name: 'smaller', label: 'Make smaller' }, { name: 'delete', label: 'Remove' }]}
+      accessibilityHint={t.sign.placedHint}
+      accessibilityActions={[{ name: 'bigger', label: t.sign.actBigger }, { name: 'smaller', label: t.sign.actSmaller }, { name: 'delete', label: t.common.remove }]}
       onAccessibilityAction={(e) => onAction(e.nativeEvent.actionName as 'bigger' | 'smaller' | 'delete')}
     >
       {mark ? (
@@ -568,39 +569,39 @@ function Signed({
       await shareUri(result.uri, kind, result.doc.name);
       afterShare();
     } catch (e: any) {
-      Alert.alert('Sharing did not open', e?.message ?? 'Try once more.');
+      Alert.alert(t.common.sharingDidNotOpen, e?.message ?? t.common.tryAgain);
     }
   };
   const sendMail = async () => {
     try {
       const r = await MailComposer.composeAsync({ subject: result.doc.name.replace(/\.(pdf|jpg)$/i, ''), attachments: [result.uri] });
-      if (r.status === 'sent') say('Sent.');
+      if (r.status === 'sent') say(t.signed.sent);
       afterShare();
     } catch (e: any) {
-      Alert.alert('Mail did not open', e?.message ?? 'Try once more.');
+      Alert.alert(t.common.mailDidNotOpen, e?.message ?? t.common.tryAgain);
     }
   };
   return (
     <View style={{ flex: 1 }}>
       <TopBar theme={theme} onBack={onClose} closeGlyph="close" />
       <View style={styles.signed}>
-        <View style={[styles.thumb, { width: frame.width, height: frame.height, borderColor: theme.edge }]} accessible accessibilityRole="image" accessibilityLabel={`Page ${preview.page + 1} of ${result.doc.name}, signed`}>
+        <View style={[styles.thumb, { width: frame.width, height: frame.height, borderColor: theme.edge }]} accessible accessibilityRole="image" accessibilityLabel={t.signed.thumb(preview.page + 1, result.doc.name)}>
           <PageView doc={preview.doc} page={preview.page} width={frame.width} height={frame.height} />
           {preview.placements.map((p) => (
             <Placed key={p.id} theme={theme} p={p} scale={frame.scale} selected={false} library={preview.library} onAction={() => {}} />
           ))}
         </View>
         <Text style={[type.title, { color: theme.ink, textAlign: 'center' }]} accessibilityRole="header">
-          Signed.
+          {t.signed.title}
         </Text>
         <Text style={[type.body, { color: theme.inkSoft, textAlign: 'center' }]}>
-          {result.doc.name} is saved in Documents. The original is unchanged.
+          {t.signed.body(result.doc.name)}
         </Text>
       </View>
       <View style={styles.signedActions}>
-        {mail ? <QuietButton theme={theme} glyph="share" label="Send in Mail" onPress={sendMail} /> : null}
-        <QuietButton theme={theme} glyph="file" label="Save to Files" onPress={share} hint="Opens the share sheet; choose Save to Files" />
-        <InkButton theme={theme} glyph="share" label="Send it back" onPress={share} hint="Mail, Messages, Files and other apps" />
+        {mail ? <QuietButton theme={theme} glyph="share" label={t.signed.sendMail} onPress={sendMail} /> : null}
+        <QuietButton theme={theme} glyph="file" label={t.signed.saveFiles} onPress={share} hint={t.signed.saveFilesHint} />
+        <InkButton theme={theme} glyph="share" label={t.signed.sendBack} onPress={share} hint={t.common.shareApps} />
       </View>
     </View>
   );

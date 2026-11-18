@@ -11,6 +11,8 @@ import { shareUri } from '../exporting';
 import Glyph from '../ui/Glyph';
 import { Caption, InkButton, Label, Panel, QuietButton, Row, Tap, Title, TopBar } from '../ui/Kit';
 import { MODAL_ANIMATION } from '../ui/motion';
+import { t } from '../i18n';
+import { date, num } from '../format';
 
 /**
  * Sign a document: open a PDF from Files or a photo of a form; anything
@@ -31,35 +33,35 @@ export default function Documents({ onOpen }: { onOpen: (doc: OpenDoc) => void }
       const doc = how === 'files' ? await pickFromFiles() : await pickFromPhotos();
       if (doc) onOpen(doc);
     } catch (e: any) {
-      Alert.alert('That file did not open', e?.message ?? 'Try another copy of it.');
+      Alert.alert(t.common.fileDidNotOpen, e?.message ?? t.common.tryAnotherCopy);
     } finally {
       setBusy(false);
     }
   };
 
-  const share = (d: RecentDoc) => shareUri(signedUri(d), d.format, d.name).catch((e) => Alert.alert('Sharing did not open', e?.message ?? ''));
+  const share = (d: RecentDoc) => shareUri(signedUri(d), d.format, d.name).catch((e) => Alert.alert(t.common.sharingDidNotOpen, e?.message ?? ''));
   const forget = (d: RecentDoc) =>
-    Alert.alert(`Remove “${d.name}”?`, 'It is deleted from this app. Copies you sent are not affected.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => setRecent(removeRecent(recent, d.id)) },
+    Alert.alert(t.documents.removeTitle(d.name), t.documents.removeBody, [
+      { text: t.common.cancel, style: 'cancel' },
+      { text: t.common.remove, style: 'destructive', onPress: () => setRecent(removeRecent(recent, d.id)) },
     ]);
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
-      <Title theme={theme}>Sign a document</Title>
-      <Text style={[type.body, { color: theme.inkSoft }]}>A lease, an offer letter, a form. Place your signature, then send it back. Nothing is uploaded.</Text>
+      <Title theme={theme}>{t.documents.title}</Title>
+      <Text style={[type.body, { color: theme.inkSoft }]}>{t.documents.intro}</Text>
       <View style={styles.open}>
-        <QuietButton theme={theme} glyph="documents" label="Open a PDF" onPress={() => open('files')} grow disabled={busy} hint="From Files, iCloud Drive or a folder on this iPhone" />
-        <QuietButton theme={theme} glyph="photo" label="A photo" onPress={() => open('photos')} grow disabled={busy} hint="A picture of a form from Photos" />
+        <QuietButton theme={theme} glyph="documents" label={t.documents.openPdf} onPress={() => open('files')} grow disabled={busy} hint={t.documents.openPdfHint} />
+        <QuietButton theme={theme} glyph="photo" label={t.documents.photo} onPress={() => open('photos')} grow disabled={busy} hint={t.documents.photoHint} />
       </View>
       {busy ? <ActivityIndicator color={theme.inkSoft} /> : null}
-      <Caption theme={theme}>From Mail or Files: tap the attachment, tap Share, then choose Signature Maker.</Caption>
+      <Caption theme={theme}>{t.documents.fromMail}</Caption>
 
       <View style={{ marginTop: space.l }}>
-        <Label theme={theme}>Signed recently</Label>
+        <Label theme={theme}>{t.documents.recent}</Label>
         {recent.length === 0 ? (
           <Caption theme={theme} style={{ marginLeft: space.xs }}>
-            Signed copies show up here. The last 20 are kept.
+            {t.documents.recentEmpty}
           </Caption>
         ) : (
           <Panel theme={theme}>
@@ -70,16 +72,16 @@ export default function Documents({ onOpen }: { onOpen: (doc: OpenDoc) => void }
                 first={i === 0}
                 glyph={d.format === 'jpg' ? 'photo' : 'documents'}
                 label={d.name}
-                sub={`${new Date(d.signedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}, ${d.pages} ${d.pages === 1 ? 'page' : 'pages'}`}
+                sub={t.documents.row(date(d.signedAt, { month: 'short', day: 'numeric' }), d.pages, num(d.pages))}
                 right={
                   <View style={styles.actions}>
-                    <Tap onPress={() => setViewing(d)} style={styles.act} accessibilityRole="button" accessibilityLabel={`Open ${d.name}`}>
-                      <Text style={[type.small, { color: theme.ink, fontWeight: '600' }]}>Open</Text>
+                    <Tap onPress={() => setViewing(d)} style={styles.act} accessibilityRole="button" accessibilityLabel={t.documents.openNamed(d.name)}>
+                      <Text style={[type.small, { color: theme.ink, fontWeight: '600' }]}>{t.common.open}</Text>
                     </Tap>
-                    <Tap onPress={() => share(d)} style={styles.act} accessibilityRole="button" accessibilityLabel={`Share ${d.name}`}>
+                    <Tap onPress={() => share(d)} style={styles.act} accessibilityRole="button" accessibilityLabel={t.documents.shareNamed(d.name)}>
                       <Glyph name="share" size={20} color={theme.ink} />
                     </Tap>
-                    <Tap onPress={() => forget(d)} style={styles.act} accessibilityRole="button" accessibilityLabel={`Remove ${d.name}`}>
+                    <Tap onPress={() => forget(d)} style={styles.act} accessibilityRole="button" accessibilityLabel={t.documents.removeNamed(d.name)}>
                       <Glyph name="trash" size={18} color={theme.inkFaint} />
                     </Tap>
                   </View>
@@ -100,7 +102,7 @@ export default function Documents({ onOpen }: { onOpen: (doc: OpenDoc) => void }
                 <Pdf source={{ uri: signedUri(viewing) }} style={{ flex: 1, backgroundColor: theme.bg }} fitPolicy={0} spacing={12} />
               )}
               <View style={{ paddingHorizontal: space.l, paddingTop: space.m }}>
-                <InkButton theme={theme} glyph="share" label="Share" onPress={() => share(viewing)} />
+                <InkButton theme={theme} glyph="share" label={t.common.share} onPress={() => share(viewing)} />
               </View>
             </View>
           ) : null}

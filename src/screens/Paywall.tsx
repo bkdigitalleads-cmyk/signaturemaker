@@ -12,7 +12,9 @@ import { maybeRequestReview } from '../reviews';
 import { defaultSignature } from '../library';
 import MarkView from '../ui/MarkView';
 import { cancelTrialReminder, scheduleTrialReminderIfTrial } from '../reminder';
-import { disclosureText, planOrder, planTitle, planTypeOf, preselect, PlanType } from '../offer';
+import { disclosureText, planOrder, planTitle, planTypeOf, preselect, PlanType, trialLength } from '../offer';
+import { t } from '../i18n';
+import { money } from '../format';
 import { TERMS_URL } from '../links';
 import Glyph from '../ui/Glyph';
 import { GlyphButton, InkButton, Tap } from '../ui/Kit';
@@ -20,17 +22,6 @@ import { MODAL_ANIMATION } from '../ui/motion';
 
 /** On the first-launch paywall the close button appears after this delay. */
 const ONBOARDING_CLOSE_DELAY_MS = 3000;
-
-/** The headline and one line, by why the paywall opened. */
-const REASON: Record<PaywallReason, { title: string; line: string }> = {
-  export: { title: 'Export without the mark.', line: 'Every format and size, with no corner mark, plus every pen and font.' },
-  document: { title: 'Sign every document.', line: 'As many signed PDFs as you need, with no corner mark, plus initials, the date and text.' },
-  pen: { title: 'All four pens.', line: 'Marker and Fountain, and all twelve script fonts.' },
-  font: { title: 'All twelve script fonts.', line: 'Pick the one closest to your handwriting. All four pens come with it.' },
-  initials: { title: 'Initials beside your signature.', line: 'Make them once. They are ready on every document.' },
-  stamp: { title: 'Initials, the date and text.', line: 'Fill in the rest of the form on the same page.' },
-  pro: { title: 'Signature Maker Pro.', line: 'Exports and signed documents with no mark, every pen and font, initials, the date and text.' },
-};
 
 /**
  * Two paywalls in one component (the engine's, from Migraine Log, Image to
@@ -103,12 +94,12 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
         const ask = purchaseReview({ onboarding, isPro: true, inTrial: await inFreeTrial() });
         if (ask) maybeRequestReview(ask);
       } else {
-        Alert.alert('Pro is on', `Every pen and font, initials, the date and text, and files with no mark.${reminded ? ' You will get a reminder the day before the trial ends.' : ''}`);
+        Alert.alert(t.purchase.proOn, `${t.purchase.proBody}${reminded ? t.purchase.reminderNote : ''}`);
       }
     } else if (res.ok) {
-      Alert.alert('Paid, but Pro is not showing', 'The App Store can lag a minute. Tap Restore purchases in a moment and it turns on.');
+      Alert.alert(t.purchase.paidNotShowing, t.purchase.paidNotShowingBody);
     } else if (!res.userCancelled && res.error) {
-      Alert.alert('The purchase did not go through', res.error);
+      Alert.alert(t.purchase.failed, res.error);
     }
   };
 
@@ -121,11 +112,11 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
     if (res.ok && res.isPro) {
       setIsPro(true);
       hidePaywall();
-      Alert.alert('Pro is back on', 'Every pen and font, initials, the date and text, and files with no mark.');
+      Alert.alert(t.purchase.proBack, t.purchase.proBody);
     } else if (res.ok) {
-      Alert.alert('Nothing to restore', 'This Apple ID has no Signature Maker Pro purchase.');
+      Alert.alert(t.purchase.nothing, t.purchase.nothingBody);
     } else {
-      Alert.alert('Restore did not work', res.error ?? 'Try once more.');
+      Alert.alert(t.purchase.restoreFailed, res.error ?? t.common.tryAgain);
     }
   };
 
@@ -139,13 +130,18 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
   const weeklyTrial = trialLabel(weeklyPkg, trialEligible);
   const shownTrial = onboarding ? weeklyTrial : null;
 
-  const money = (n: number, cur?: string) => n.toLocaleString(undefined, { style: 'currency', currency: cur ?? 'USD' });
-  const yearlyPerWeek = yearlyPkg?.product.price ? `${money(yearlyPkg.product.price / 52, yearlyPkg.product.currencyCode)} a week` : null;
+  // The only price the app works out itself (the yearly price over 52 weeks), in the store's currency and the device's number format.
+  const yearlyPerWeek = yearlyPkg?.product.price ? t.paywall.perWeek(money(yearlyPkg.product.price / 52, yearlyPkg.product.currencyCode)) : null;
 
-  const disclosure = disclosureText({ weekly: weeklyPkg?.product.priceString, yearly: yearlyPkg?.product.priceString, lifetime: lifetimePkg?.product.priceString, trial: weeklyTrial });
+  const disclosure = disclosureText({
+    weekly: weeklyPkg?.product.priceString,
+    yearly: yearlyPkg?.product.priceString,
+    lifetime: lifetimePkg?.product.priceString,
+    trialLength: weeklyTrial ? trialLength(weeklyPkg?.product.introPrice) : null,
+  });
 
-  const copy = REASON[reason];
-  const headline = shownTrial ? `${copy.title} ${shownTrial[0].toUpperCase()}${shownTrial.slice(1)} first.` : copy.title;
+  const copy = t.paywall.reasons[reason];
+  const headline = shownTrial ? t.paywall.withTrial(copy.title, shownTrial) : copy.title;
   const keepGoing = reason === 'export' || reason === 'document';
 
   return (
@@ -154,15 +150,15 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
         <ScrollView contentContainerStyle={styles.scroll}>
           {/* Holds its space while hidden so nothing jumps when the close button appears. */}
           <View style={[styles.closeRow, { opacity: canClose ? 1 : 0 }]} accessibilityElementsHidden={!canClose} importantForAccessibility={canClose ? 'auto' : 'no-hide-descendants'}>
-            <GlyphButton theme={theme} glyph="close" label={keepGoing ? 'Close and continue with the corner mark' : 'Close'} onPress={close} disabled={!canClose} color={theme.inkSoft} />
+            <GlyphButton theme={theme} glyph="close" label={keepGoing ? t.paywall.closeWithMark : t.common.close} onPress={close} disabled={!canClose} color={theme.inkSoft} />
           </View>
 
           {mine ? (
             <View style={[styles.pad, styles.mine]}>
               <View style={[styles.minePaper, { backgroundColor: theme.paper, borderColor: theme.edge }]}>
-                <MarkView mark={mine.main} height={40} maxWidth={150} label="Your signature" />
+                <MarkView mark={mine.main} height={40} maxWidth={150} label={t.paywall.yourSignature} />
               </View>
-              <Text style={[type.strong, { color: theme.ink, flex: 1 }]}>Your signature is saved.</Text>
+              <Text style={[type.strong, { color: theme.ink, flex: 1 }]}>{t.paywall.signatureSaved}</Text>
             </View>
           ) : null}
           <Text style={[type.title, styles.pad, compact || mine ? { marginTop: space.m } : { marginTop: space.l }, { color: theme.ink }]} accessibilityRole="header">
@@ -171,28 +167,28 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
           <Text style={[type.body, styles.pad, styles.line, { color: theme.inkSoft }]}>{copy.line}</Text>
           {mine ? null : (
             <Text style={[type.body, styles.pad, styles.line, { color: theme.inkSoft }]}>
-              {keepGoing ? 'Or close this to save it with a small corner mark. Making and saving signatures is always free.' : 'Making and saving signatures is always free.'}
+              {keepGoing ? t.paywall.orClose : t.paywall.alwaysFree}
             </Text>
           )}
 
           {loading ? (
             <ActivityIndicator style={{ marginVertical: space.xl }} color={theme.inkSoft} />
           ) : packages.length === 0 || !isBillingAvailable() ? (
-            <Text style={[type.body, styles.unavailable, { color: theme.inkSoft }]}>The App Store did not answer. Try again in a minute.</Text>
+            <Text style={[type.body, styles.unavailable, { color: theme.inkSoft }]}>{t.paywall.unavailable}</Text>
           ) : (
             <View style={[styles.plans, compact && { marginTop: space.l }, { backgroundColor: theme.surface, borderColor: theme.edge }]} accessibilityRole="radiogroup">
               {packages.map((p, i) => {
-                const t = p.packageType as PlanType;
+                const plan = p.packageType as PlanType;
                 const on = selected?.identifier === p.identifier;
-                const title = planTitle(t);
+                const title = planTitle(plan);
                 const line =
-                  t === 'ANNUAL'
-                    ? `${p.product.priceString} a year${yearlyPerWeek ? `, ${yearlyPerWeek}` : ''}`
-                    : t === 'LIFETIME'
-                      ? `${p.product.priceString} once, yours to keep`
+                  plan === 'ANNUAL'
+                    ? t.paywall.perYear(p.product.priceString, yearlyPerWeek)
+                    : plan === 'LIFETIME'
+                      ? t.paywall.once(p.product.priceString)
                       : weeklyTrial
-                        ? `${weeklyTrial}, then ${p.product.priceString} a week`
-                        : `${p.product.priceString} a week`;
+                        ? t.paywall.trialThen(weeklyTrial, p.product.priceString)
+                        : t.paywall.perWeek(p.product.priceString);
                 return (
                   <Tap
                     key={p.identifier}
@@ -218,11 +214,11 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
 
         <View style={[styles.bottom, { borderTopColor: theme.edge, paddingBottom: Math.max(insets.bottom, space.m) }]}>
           {/* The button says Continue, never Subscribe. */}
-          <InkButton theme={theme} label={purchasing ? 'One moment' : 'Continue'} onPress={buy} disabled={purchasing || !selected || loading} />
+          <InkButton theme={theme} label={purchasing ? t.paywall.oneMoment : t.common.continue} onPress={buy} disabled={purchasing || !selected || loading} />
           {selected && trialLabel(selected, trialEligible) ? (
             <View style={styles.checkLine}>
               <Glyph name="check" size={18} color={theme.ink} weight={2.2} />
-              <Text style={[type.strong, { color: theme.ink }]}>No payment now</Text>
+              <Text style={[type.strong, { color: theme.ink }]}>{t.paywall.noPayment}</Text>
             </View>
           ) : null}
           {/*
@@ -233,13 +229,13 @@ export default function PaywallModal({ privacyUrl, onboarding = false, nested = 
           <Text style={[styles.legalText, { color: theme.inkFaint }]}>Signature Maker Pro. {disclosure}</Text>
           <View style={styles.legalLinks}>
             <Text style={[styles.legalLink, { color: theme.inkSoft }]} onPress={onRestore} accessibilityRole="button">
-              {restoring ? 'Restoring' : 'Restore purchases'}
+              {restoring ? t.purchase.restoring : t.purchase.restore}
             </Text>
             <Text style={[styles.legalLink, { color: theme.inkSoft }]} onPress={() => Linking.openURL(TERMS_URL)} accessibilityRole="link">
-              Terms of Use (EULA)
+              {t.paywall.terms}
             </Text>
             <Text style={[styles.legalLink, { color: theme.inkSoft }]} onPress={() => Linking.openURL(privacyUrl)} accessibilityRole="link">
-              Privacy Policy
+              {t.paywall.privacy}
             </Text>
           </View>
         </View>

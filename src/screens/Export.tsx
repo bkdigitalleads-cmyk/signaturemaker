@@ -11,14 +11,19 @@ import { maybeRequestReview } from '../reviews';
 import Checker from '../ui/Checker';
 import { Caption, InkButton, Label, Pill, QuietButton, TopBar } from '../ui/Kit';
 import { savedHaptic } from '../ui/motion';
+import { t } from '../i18n';
+import { num } from '../format';
 
 type Choice = 'transparent' | 'white-png' | 'white-jpg';
 
-const CHOICES: { id: Choice; label: string; background: Background; format: Format }[] = [
-  { id: 'transparent', label: 'Transparent PNG', background: 'transparent', format: 'png' },
-  { id: 'white-png', label: 'PNG on white', background: 'white', format: 'png' },
-  { id: 'white-jpg', label: 'JPG on white', background: 'white', format: 'jpg' },
+const CHOICES: { id: Choice; background: Background; format: Format }[] = [
+  { id: 'transparent', background: 'transparent', format: 'png' },
+  { id: 'white-png', background: 'white', format: 'png' },
+  { id: 'white-jpg', background: 'white', format: 'jpg' },
 ];
+
+/** A format's name, in the app's language. */
+const choiceLabel = (id: Choice) => (id === 'transparent' ? t.export.transparentPng : id === 'white-png' ? t.export.pngOnWhite : t.export.jpgOnWhite);
 
 /**
  * Export a saved signature (or its initials): the real file is rendered
@@ -40,6 +45,7 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
 
   const mark: Mark = which === 'initials' && sig.initials ? sig.initials : sig.main;
   const opt = CHOICES.find((c) => c.id === choice)!;
+  const optLabel = choiceLabel(choice);
   // Decided when the screen opens, so the preview does not switch to the marked
   // version the moment the free first export is saved (that one was clean). Pro
   // still takes the mark off at once.
@@ -69,8 +75,8 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
     setBusy(true);
     try {
       const r = await renderArt(mark.art, inkHex(sig.ink), { scale, background: opt.background, format: opt.format, watermark: d.watermark });
-      if (!r) throw new Error('There is nothing to export.');
-      const name = exportFileName(`${sig.name}${which === 'initials' ? ' initials' : ''}`, opt.format);
+      if (!r) throw new Error(t.export.nothing);
+      const name = exportFileName(`${sig.name}${which === 'initials' ? ` ${t.export.initialsFile}` : ''}`, opt.format);
       const done = await use(r, name);
       if (done) {
         countUsage('exports');
@@ -79,13 +85,13 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
         if (first) maybeRequestReview('firstExport');
       }
     } catch (e: any) {
-      Alert.alert('That did not work', e?.message ?? 'Try once more.');
+      Alert.alert(t.export.didNotWork, e?.message ?? t.common.tryAgain);
     } finally {
       setBusy(false);
     }
   };
 
-  const doneLine = choice === 'transparent' ? 'Saved. It has a transparent background.' : 'Saved.';
+  const doneLine = choice === 'transparent' ? t.export.savedTransparent : t.export.saved;
 
   const onShare = () =>
     run(async (r, name) => {
@@ -96,15 +102,15 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
     run(async (r, name) => {
       const ok = await saveToPhotos(name, r.base64);
       if (!ok) {
-        Alert.alert('Photos is off for Signature Maker', 'Allow adding photos in Settings, Signature Maker, Photos. The app only adds images; it never reads your library.');
+        Alert.alert(t.export.photosOffTitle, t.export.photosOffBody);
         return null;
       }
-      return choice === 'transparent' ? 'Saved to Photos. It has a transparent background.' : 'Saved to Photos.';
+      return choice === 'transparent' ? t.export.savedToPhotosTransparent : t.export.savedToPhotos;
     });
   const onCopy = () =>
     run(async (r) => {
       await copyImage(r.base64);
-      return 'Copied. Paste it into Mail, Notes or a document.';
+      return t.export.copied;
     });
 
   return (
@@ -112,53 +118,53 @@ export default function Export({ sig, onBack }: { sig: Signature; onBack: () => 
       <TopBar theme={theme} title={sig.name} onBack={onBack} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.pills}>
-          <Pill theme={theme} label="Checkerboard" on={view === 'checker'} onPress={() => setView('checker')} />
-          <Pill theme={theme} label="On a letter" on={view === 'letter'} onPress={() => setView('letter')} />
+          <Pill theme={theme} label={t.export.checkerboard} on={view === 'checker'} onPress={() => setView('checker')} />
+          <Pill theme={theme} label={t.export.onLetter} on={view === 'letter'} onPress={() => setView('letter')} />
           {sig.initials ? (
             <>
               <View style={{ flex: 1 }} />
-              <Pill theme={theme} label={which === 'main' ? 'Signature' : 'Initials'} on={false} glyph="initials" onPress={() => setWhich(which === 'main' ? 'initials' : 'main')} />
+              <Pill theme={theme} label={which === 'main' ? t.export.signature : t.export.initials} on={false} glyph="initials" onPress={() => setWhich(which === 'main' ? 'initials' : 'main')} />
             </>
           ) : null}
         </View>
 
         {view === 'checker' ? (
           <Checker a={opt.background === 'white' ? '#FFFFFF' : theme.checkA} b={opt.background === 'white' ? '#FFFFFF' : theme.checkB} style={[styles.stage, { width: boxW, borderColor: theme.edge }]}>
-            <Shown preview={preview} boxW={boxW - space.xl * 2} boxH={170} aspect={aspectOf(mark)} label={`${sig.name}, ${opt.label}`} />
+            <Shown preview={preview} boxW={boxW - space.xl * 2} boxH={170} aspect={aspectOf(mark)} label={t.export.preview(sig.name, optLabel)} />
           </Checker>
         ) : (
           <Letter theme={theme} preview={preview} width={boxW} aspect={aspectOf(mark)} name={sig.main.art.kind === 'typed' ? sig.main.art.text : prefs.typedName} />
         )}
         <Caption theme={theme}>
-          {view === 'checker' && choice === 'transparent' ? 'The gray squares show where it is clear. On a page or in an email, only the ink shows.' : 'This is the file as it will be saved.'}
-          {showMark ? ' Your free export is used, so this one carries a small “Made with Signature Maker” mark. Pro removes it.' : ''}
+          {view === 'checker' && choice === 'transparent' ? t.export.checkerCaption : t.export.fileCaption}
+          {showMark ? t.export.markCaption : ''}
         </Caption>
 
         <View>
-          <Label theme={theme}>Format</Label>
+          <Label theme={theme}>{t.export.format}</Label>
           <View style={styles.wrap}>
             {CHOICES.map((c) => (
-              <Pill key={c.id} theme={theme} label={c.label} on={choice === c.id} onPress={() => setChoice(c.id)} />
+              <Pill key={c.id} theme={theme} label={choiceLabel(c.id)} on={choice === c.id} onPress={() => setChoice(c.id)} />
             ))}
           </View>
         </View>
         <View>
-          <Label theme={theme}>Size</Label>
+          <Label theme={theme}>{t.export.size}</Label>
           <View style={styles.wrap}>
             <Pill theme={theme} label="2x" on={scale === 2} onPress={() => setScale(2)} />
             <Pill theme={theme} label="3x" on={scale === 3} onPress={() => setScale(3)} />
             <Text style={[type.small, styles.px, { color: theme.inkSoft }]}>
-              {px.width} × {px.height} px
+              {t.export.pixels(num(px.width), num(px.height))}
             </Text>
           </View>
         </View>
       </ScrollView>
       <View style={styles.footer}>
         <View style={styles.row}>
-          <QuietButton theme={theme} glyph="photo" label="Save to Photos" onPress={onPhotos} grow disabled={busy} />
-          <QuietButton theme={theme} glyph="copy" label="Copy" onPress={onCopy} disabled={busy} />
+          <QuietButton theme={theme} glyph="photo" label={t.export.saveToPhotos} onPress={onPhotos} grow disabled={busy} />
+          <QuietButton theme={theme} glyph="copy" label={t.export.copy} onPress={onCopy} disabled={busy} />
         </View>
-        <InkButton theme={theme} glyph="share" label={`Share ${opt.label}`} onPress={onShare} busy={busy} hint="Mail, Messages, Files and other apps" />
+        <InkButton theme={theme} glyph="share" label={t.export.shareAs(optLabel)} onPress={onShare} busy={busy} hint={t.common.shareApps} />
       </View>
     </View>
   );
@@ -183,10 +189,10 @@ function Shown({ preview, boxW, boxH, aspect, label }: { preview: Rendered | nul
 function Letter({ theme, preview, width, aspect, name }: { theme: Theme; preview: Rendered | null; width: number; aspect: number; name: string }) {
   const text = { fontFamily: fonts.serif, fontSize: 13, lineHeight: 19, color: theme.paperInk };
   return (
-    <View style={[styles.letter, { width, backgroundColor: theme.paper, borderColor: theme.edge }]} accessible accessibilityLabel="The signature at the foot of a sample letter">
-      <Text style={text}>Dear Ms. Alvarez,</Text>
-      <Text style={[text, { marginTop: space.s }]}>Thank you for the offer. I have read the terms and I am glad to accept. The signed copy is attached.</Text>
-      <Text style={[text, { marginTop: space.m }]}>Sincerely,</Text>
+    <View style={[styles.letter, { width, backgroundColor: theme.paper, borderColor: theme.edge }]} accessible accessibilityLabel={t.export.letterA11y}>
+      <Text style={text}>{t.letter.greeting}</Text>
+      <Text style={[text, { marginTop: space.s }]}>{t.letter.body}</Text>
+      <Text style={[text, { marginTop: space.m }]}>{t.letter.closing}</Text>
       <View style={{ height: 64, justifyContent: 'center' }}>
         <Shown preview={preview} boxW={width * 0.5} boxH={58} aspect={aspect} label="" />
       </View>
