@@ -624,8 +624,8 @@ test('app.json: identity, placeholders, document types for Open in, add-only Pho
   assert.equal(app.name, 'Signature Maker');
   assert.equal(app.slug, 'signaturemaker');
   assert.equal(app.ios.bundleIdentifier, 'com.bwk.signaturemaker');
-  assert.equal(app.version, '1.0.3');
-  assert.equal(app.ios.buildNumber, "6");
+  assert.equal(app.version, '1.0.4');
+  assert.equal(app.ios.buildNumber, "7");
   assert.equal(JSON.parse(readFileSync(`${ROOT}package.json`, "utf8")).version, app.version);
   assert.equal(app.owner, 'bkdeveloper123');
   assert.equal(app.plugins[app.plugins.length - 1], './plugins/withoutPushEntitlement');
@@ -904,7 +904,7 @@ const SAMPLES = {
   'signed.body': [['Lease signed.pdf']],
   'signed.thumb': [[2, 'Lease signed.pdf']],
   'settings.writeTo': [['bkdigitalleads@gmail.com']],
-  'settings.version': [['1.0.3 (6)']],
+  'settings.version': [['1.0.4 (7)']],
   'settings.counts': [[1, 1, '1', '1'], [3, 12, '3', '12']],
   'paywall.withTrial': [['Sign every document.', '3 days free']],
   'paywall.perWeek': [['$4.99']],
@@ -1054,5 +1054,81 @@ test('languages: read once at startup before the app loads, declared to iOS, the
   for (const f of [...walk(`${ROOT}src/screens`, ['.tsx']), ...walk(`${ROOT}src/ui`, ['.tsx']), `${ROOT}App.tsx`]) {
     const src = readFileSync(f, 'utf8');
     assert.equal(src.match(/Alert\.(alert|prompt)\(['`]|say\('|(label|hint|placeholder|title|button|accessibilityLabel|accessibilityHint)="[A-Za-z][a-z]/g), null, f);
+  }
+});
+
+// ---------- 1.0.4: seven more English listings for the U.S. App Store ----------
+
+test('store listings: the seven new English listings keep the length, no-repeat, product-name and phrase rules', () => {
+  const md = readFileSync(`${ROOT}store/metadata.md`, 'utf8');
+  const section = md.slice(md.indexOf('## Seven more English listings'), md.indexOf('## Promotional text'));
+  const NEW = ['ar-SA', 'ko', 'pt-BR', 'ru', 'vi', 'zh-Hans', 'zh-Hant'];
+  const rows = {};
+  for (const line of section.split('\n')) {
+    const cells = line.split('|').map((c) => c.trim());
+    if (NEW.includes(cells[1])) rows[cells[1]] = { name: cells[2], subtitle: cells[3], keywords: cells[4], lengths: cells[5] };
+  }
+  assert.deepEqual(Object.keys(rows).sort(), [...NEW].sort());
+
+  const words = (s) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  // A plural or singular counts as the same word ("contracts" and "contract", "leases" and "lease").
+  const stem = (w) => w.replace(/ies$/, 'y').replace(/(ch|sh|x|ss)es$/, '$1').replace(/s$/, '');
+  const notDone = ['scan', 'scanner', 'camera', 'cloud', 'send', 'verify', 'verified', 'legally', 'binding', 'certified', 'certify', 'now'];
+  const brands = ['docusign', 'adobe', 'acrobat', 'signnow', 'pdffiller', 'hellosign', 'dropbox', 'pandadoc', 'signeasy', 'docuseal', 'smallpdf', 'ilovepdf', 'foxit', 'nitro', 'jotform', 'yousign', 'zoho', 'signwell', 'boldsign', 'scrivener'];
+
+  for (const [loc, r] of Object.entries(rows)) {
+    assert.ok(r.name.length <= 30, `${loc} name is ${r.name.length} characters`);
+    assert.ok(r.subtitle.length <= 30, `${loc} subtitle is ${r.subtitle.length} characters`);
+    assert.ok(Buffer.byteLength(r.keywords, 'utf8') <= 100, `${loc} keywords are ${Buffer.byteLength(r.keywords)} bytes`);
+    assert.ok(!/\s/.test(r.keywords), `${loc} keywords have a space`);
+    const kws = r.keywords.split(',');
+    assert.ok(kws.every((k) => /^[a-z0-9]+$/.test(k)), `${loc} has an empty or odd keyword`);
+    // The lengths column says what the fields are.
+    assert.equal(r.lengths, `${r.name.length} / ${r.subtitle.length} / ${Buffer.byteLength(r.keywords)}`, `${loc} lengths column`);
+    // No word twice anywhere in the listing, counting plurals.
+    const all = [...words(r.name), ...words(r.subtitle), ...kws];
+    const seen = new Map();
+    for (const w of all) {
+      const s = stem(w);
+      assert.ok(!seen.has(s), `${loc} repeats "${w}" (already "${seen.get(s)}")`);
+      seen.set(s, w);
+    }
+    for (const w of all) {
+      assert.ok(!notDone.includes(w), `${loc} uses "${w}", which the app does not do`);
+      assert.ok(!brands.some((b) => w.includes(b)), `${loc} uses a product name: ${w}`);
+    }
+    const text = `${r.name} ${r.subtitle}`.toLowerCase();
+    assert.ok(!/fill\s*(and|&)\s*sign/.test(text), `${loc} has "fill and sign"`);
+    assert.ok(!/—/.test(`${r.name}${r.subtitle}${r.keywords}`), `${loc} has an em dash`);
+  }
+
+  // English (U.S.) and Spanish (Mexico) are exactly as they were.
+  assert.match(md, /## Name \(28\/30\)\nElectronic Signature Creator\n/);
+  assert.match(md, /## Subtitle \(26\/30\)\nSign Documents & PDF Maker\n/);
+  assert.match(md, /\nesign,e,fill,form,filler,signer,editor,generator,now,draw,initials,contract,autograph,png,doc,word\n/);
+  assert.match(md, /Name \(30\/30\): Signature Maker: Sign PDF Docs\n/);
+  assert.match(md, /Subtitle \(30\/30\): eSign, Fill Forms & PDF Filler\n/);
+  assert.match(md, /\neditor,signer,document,electronic,creator,generator,form,e,now,contract,handwritten,stamp,digital\n/);
+
+  // Every target phrase sits whole in some name or subtitle, inside one piece between commas, colons and "&".
+  const fields = {
+    'en-US': ['Electronic Signature Creator', 'Sign Documents & PDF Maker'],
+    'es-MX': ['Signature Maker: Sign PDF Docs', 'eSign, Fill Forms & PDF Filler'],
+    ...Object.fromEntries(Object.entries(rows).map(([l, r]) => [l, [r.name, r.subtitle]])),
+  };
+  const holds = (field, phrase) => field.split(/[,:&]/).some((piece) => ` ${words(piece).join(' ')} `.includes(` ${phrase} `));
+  const table = section.slice(section.indexOf('| Phrase |'));
+  const PHRASES = ['esign', 'sign documents', 'signature maker', 'pdf filler', 'signature', 'e sign', 'form filler', 'document sign', 'electronic signature', 'document signer', 'sign app', 'signature creator', 'pdf signer', 'sign pdf', 'signature generator', 'pdf sign', 'e signature', 'signature app'];
+  for (const phrase of PHRASES) {
+    const inName = Object.keys(fields).filter((l) => holds(fields[l][0], phrase));
+    const inSub = Object.keys(fields).filter((l) => holds(fields[l][1], phrase));
+    assert.ok(inName.length + inSub.length > 0, `"${phrase}" forms in no listing`);
+    // The coverage table in store/metadata.md says the same.
+    const row = table.split('\n').find((line) => line.startsWith(`| ${phrase} |`));
+    assert.ok(row, `no coverage row for "${phrase}"`);
+    const [, , , name, sub] = row.split('|').map((c) => c.trim());
+    const list = (c) => (c ? c.split(',').map((x) => x.trim()).sort() : []);
+    assert.deepEqual(list(name), [...inName].sort(), `name column for "${phrase}"`);
+    assert.deepEqual(list(sub), [...inSub].sort(), `subtitle column for "${phrase}"`);
   }
 });

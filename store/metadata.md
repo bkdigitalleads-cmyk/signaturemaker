@@ -1,4 +1,4 @@
-# Signature Maker, App Store metadata (1.0.3)
+# Signature Maker, App Store metadata (1.0.4)
 
 Everything here is pasted into App Store Connect by Brian and Cowork. No em dashes anywhere, no brand words (no other signing products or PDF software), no "Unlock", "Premium", "Seamless", "Effortless", "Welcome", "Let's", "Professional-grade" or exclamation marks.
 
@@ -34,6 +34,59 @@ Keywords (97/100):
 editor,signer,document,electronic,creator,generator,form,e,now,contract,handwritten,stamp,digital
 
 Same rule as English: no word from this locale's name or subtitle, no repeats within the locale. Counted with node: 97 characters, 13 words. "editor" stays on purpose: adding text, dates and signatures to a PDF is the kind of editing these searches mean. The app has no camera, so there is no "scan".
+
+## Seven more English listings (new in 1.0.4)
+The U.S. App Store also indexes these locales' name, subtitle and keywords, so each carries its own set of English words, as Spanish (Mexico) already does. Brian's brief (Nov 25). English (U.S.), Spanish (Mexico), French, Italian, German and Spanish (Spain) stay exactly as they are.
+
+Add each locale in App Store Connect and paste its three fields. The description, promotional text, support URL, marketing URL and privacy policy URL are copied from English (U.S.). What's New is "Small fixes and improvements." (see What's New (1.0.4) below).
+
+| Locale | Name | Subtitle | Keywords | Lengths |
+|---|---|---|---|---|
+| ar-SA | PDF Signer & Form Filler | Document Sign, eSign Contracts | signature,e,electronic,app,maker,creator,generator,fill,lease,agreement,invoice,initials,draw,png | 24 / 30 / 97 |
+| ko | eSign: Sign Documents & PDF | Electronic Signature App | signer,e,maker,creator,generator,filler,form,fill,contract,lease,agreement,invoice,initials,draw,png | 27 / 24 / 100 |
+| pt-BR | PDF Filler: Fill Out Forms | E Signature, Document Signer | esign,sign,electronic,app,maker,creator,generator,contract,lease,agreement,invoice,initials,draw,png | 26 / 28 / 100 |
+| ru | Signature Generator & Creator | Draw, Save & Sign PDF Docs | esign,signer,e,electronic,document,app,maker,filler,form,fill,contract,lease,agreement,invoice,png | 29 / 26 / 98 |
+| vi | E Sign App: Forms & Contracts | PDF Signer & Signature Maker | esign,electronic,document,creator,generator,filler,fill,lease,agreement,invoice,initials,draw,png | 29 / 28 / 97 |
+| zh-Hans | Document Signer: Sign PDF | E Signature for Contracts | esign,electronic,app,maker,creator,generator,filler,form,fill,lease,agreement,invoice,initials,draw | 25 / 25 / 99 |
+| zh-Hant | Signature App: PDF Sign | eSign Contracts, Leases, Forms | signer,e,electronic,document,maker,creator,generator,filler,fill,agreement,invoice,initials,draw,png | 23 / 30 / 100 |
+
+Lengths are name / subtitle characters and keyword bytes, counted with node (all ASCII, so bytes equal characters). `npm test` checks the table.
+
+Rules for these seven (Brian, Nov 25), checked by `npm test`:
+- A search phrase only forms inside one listing, so each target phrase sits whole in a name or subtitle, never split by a comma, colon or "&".
+- Inside one listing no word repeats across the name, subtitle and keywords, and no plural or singular of a word already there ("Contracts" in a subtitle keeps "contract" out of its keywords).
+- Names and subtitles at most 30 characters; keywords at most 100 bytes, comma separated, no spaces.
+- No other signing or PDF product's name, nothing close to one ("now" is not used, so "sign now" never forms; no "fill and sign"), and nothing the app does not do (no scan, scanner, camera, cloud, send, verify, legally binding, certified).
+- Keywords are, in order: the words that complete a target phrase with the listing's own name or subtitle (for example "signature" where the name has "maker" or "generator" free), then app words (contract, lease, agreement, invoice, initials, draw, png), as many as fit.
+
+Changes from the draft names and subtitles:
+- vi: the draft name "Sign App: E Sign Documents" used "Sign" twice. "E Sign App" now carries both "e sign" and "sign app" in three words.
+- zh-Hant: the draft subtitle "Sign Lease, Contract & Invoice" repeated the name's "Sign", and "Sign Any PDF" split "sign pdf". The name is now "Signature App: PDF Sign" (signature app, pdf sign), and the subtitle "eSign Contracts, Leases, Forms".
+- pt-BR: the draft name "PDF Filler: Fill Forms & Sign" read close to "Fill & Sign", a product name. It is now "PDF Filler: Fill Out Forms". The draft subtitle "Document Signing, E Signature" became "E Signature, Document Signer", so "document signer" forms as a whole phrase.
+- ar-SA, ko, ru and zh-Hans are as drafted.
+
+Where each target phrase sits whole (daily U.S. searches from the brief; "en-US" and "es-MX" are the existing listings):
+
+| Phrase | Searches | Name | Subtitle |
+|---|---|---|---|
+| esign | 2423 | ko | ar-SA, zh-Hant, es-MX |
+| sign documents | 1237 | ko | en-US |
+| signature maker | 1221 | es-MX | vi |
+| pdf filler | 1152 | pt-BR | es-MX |
+| signature | 998 | en-US, ru, zh-Hant, es-MX | ko, pt-BR, vi, zh-Hans |
+| e sign | 923 | vi | |
+| form filler | 738 | ar-SA | |
+| document sign | 699 | | ar-SA |
+| electronic signature | 660 | en-US | ko |
+| document signer | 629 | zh-Hans | pt-BR |
+| sign app | 545 | vi | |
+| signature creator | 537 | en-US | |
+| pdf signer | 520 | ar-SA | vi |
+| sign pdf | 371 | zh-Hans, es-MX | ru |
+| signature generator | 276 | ru | |
+| pdf sign | 159 | zh-Hant | |
+| e signature | 141 | | pt-BR, zh-Hans |
+| signature app | 118 | zh-Hant | ko |
 
 ## Promotional text (148/170)
 Sign the PDF in your inbox from your iPhone. Draw or type your signature once, save it as a transparent PNG, and use it on any document. No account.
@@ -77,6 +130,11 @@ Free: drawing, typing and saving as many signatures as you like, your library, a
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://bkdigitalleads-cmyk.github.io/signaturemaker/privacy.html
+
+## What's New (1.0.4)
+Small fixes and improvements.
+
+The same line goes in every listing: English (U.S.), Spanish (Mexico), French, Italian, German, Spanish (Spain) and the seven new ones (ar-SA, ko, pt-BR, ru, vi, zh-Hans, zh-Hant).
 
 ## What's New (1.0.3)
 The app's own text is now in five languages. Each locale in App Store Connect gets its line; the German, French, Spanish and Italian locales need adding there if they are not set up yet (the rest of their listing can stay English for now). Spanish (Mexico) uses the Spanish line.

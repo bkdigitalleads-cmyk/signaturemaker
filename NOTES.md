@@ -2,6 +2,33 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-25: 1.0.4 build 7, a keyword release: seven more English listings the U.S. App Store also indexes (branch claude/1.0.4-keywords, from main f75b2e8). No app code changes.
+  - store/metadata.md, new section "Seven more English listings (new in 1.0.4)": a name, subtitle and keyword field for ar-SA, ko, pt-BR, ru, vi, zh-Hans and zh-Hant. The description, promotional text and links are copied from English (U.S.). English (U.S.), Spanish (Mexico), French, Italian, German and Spanish (Spain) are unchanged.
+  - Brian's drafts were kept where they met his rules (ar-SA, ko, ru, zh-Hans). Three changed:
+    - vi: "Sign App: E Sign Documents" used "Sign" twice; it is now "E Sign App: Forms & Contracts", which carries both "e sign" and "sign app".
+    - zh-Hant: the subtitle repeated the name's "Sign", and "Sign Any PDF" split "sign pdf". It is now "Signature App: PDF Sign" with "eSign Contracts, Leases, Forms".
+    - pt-BR: "Fill Forms & Sign" read close to "Fill & Sign", a product name. It is now "PDF Filler: Fill Out Forms", with "E Signature, Document Signer" so "document signer" forms whole.
+  - All 18 target phrases from the brief now sit whole in at least one name or subtitle across the nine English-language listings. The ten that no listing carried before (e sign, form filler, document sign, document signer, sign app, pdf signer, signature generator, pdf sign, e signature, signature app) are all placed. A table in store/metadata.md says where each one sits.
+  - Keywords: in each listing, first the words that complete a target phrase with that listing's own name or subtitle, then app words (contract, lease, agreement, invoice, initials, draw, png), as many as fit in 100 bytes. Every field is 97 to 100 bytes.
+  - What's New (1.0.4): "Small fixes and improvements." in every listing.
+  - Version: app.json 1.0.4 and ios.buildNumber 7 (build 6 was the last uploaded); package.json and package-lock.json 1.0.4; the app.json test expects them; the metadata heading says 1.0.4. Merging this builds, because app.json and package*.json change; a new App Store version needs a build of its own.
+  - New check in npm test, reading the table from store/metadata.md:
+    - name and subtitle at most 30 characters, keywords at most 100 bytes, comma separated, with no spaces and no empty entries;
+    - the lengths column is right;
+    - no word repeated inside a listing, plurals and singulars included;
+    - no "now", no "fill and sign", no product names, and nothing the app does not do (scan, scanner, camera, cloud, send, verify, legally binding, certified);
+    - English (U.S.) and Spanish (Mexico) exactly as they were;
+    - every target phrase whole in some name or subtitle, never split by a comma, colon or "&", and the coverage table matching.
+  - Proved the check bites by breaking the table and seeing it fail: the draft vi name (lengths column), a repeated "Forms" in vi (repeat), "now" in ko's keywords, and a wrong coverage row.
+  - Checked: npx tsc --noEmit clean; npm test 47 pass; no em dashes in store/metadata.md.
+  - Noticed, not changed:
+    - English (U.S.) and Spanish (Mexico) both have "now" in their keywords next to "Sign" in their name or subtitle, so "sign now" forms there. That phrase is the new product-name rule's example. Swapping "now" for another word in a later keyword update would fix it.
+    - "PDF Filler" (Spanish (Mexico) subtitle, and the pt-BR name as drafted) is very close to pdfFiller, a PDF product. It is in the brief's target list with 1,152 daily searches, so it stays. If Brian wants to stay well clear, pt-BR could use "Fill Out PDF Forms" instead, at the cost of that exact phrase.
+    - The English description, now copied to seven more listings, says "send the signed copy back" and "SIGN A PDF AND SEND IT BACK". The app hands the file to Mail or the share sheet; it does not send anything itself. "send" is on the new list of things not to claim.
+    - English (U.S.) keywords also have "word" (Microsoft Word, not a signing or PDF product) and "editor" (the app adds a signature, a date and text; it does not edit a PDF's own text). Both were Brian's choice earlier.
+    - The German, French, Spanish (Spain) and Italian listings get the English What's New line as briefed; a translated line would read better there.
+    - CLAUDE.md still says "Not in the store yet" and points to the 1.0.0 branch, and its list of pure modules does not name src/i18n.ts, src/format.ts or src/strings/.
+
 - 2026-11-18: 1.0.3 build 6, the translations become the next release (same branch, claude/localize-de-fr-es-it, same PR). Apple approved 1.0.2 today, so the German, French, Spanish and Italian work in the entry below ships as 1.0.3.
   - Version: app.json `version` 1.0.3 and `ios.buildNumber` 6; package.json and package-lock.json 1.0.3; the app.json check in tests/logic.test.mjs expects 1.0.3 and build 6; store/metadata.md's heading says 1.0.3.
   - Branch: up to date with main (main is still 5a6391f, the 1.0.2 merge; the branch is that plus the translation commit), so nothing to merge in.
