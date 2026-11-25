@@ -2,6 +2,22 @@
 
 Newest first. One entry per commit: date, version/build, what changed and why, and how it was checked.
 
+- 2026-11-25: 1.0.4 build 7, Brian's five follow-ups on the keyword release (same branch claude/1.0.4-keywords, same PR 7). Markdown and tests only; no app code; still 1.0.4 build 7.
+  - pt-BR name is now "Fill Out PDF Forms" (18), so no new listing leads with a phrase close to a product name ("PDF Filler", pdfFiller). Its subtitle "E Signature, Document Signer" and keywords stay: none of their words is in the new name, and "filler" stays out on purpose. "pdf filler" now sits whole only in the Spanish (Mexico) subtitle; the coverage table says so.
+  - English (U.S.) keywords, 99 bytes: esign,e,fill,form,filler,signer,editor,generator,app,draw,initials,contract,autograph,png,doc,lease. "now" became "app" (no "sign now"; "sign app" and "signature app" form), and "word" became "lease" (a document people sign with the app, not a product name, and "sign lease" forms). "editor" stays.
+  - Spanish (Mexico) keywords, 97 bytes: editor,signer,document,electronic,creator,generator,form,e,app,contract,handwritten,stamp,digital ("now" became "app").
+  - Brian enters both fields in App Store Connect. store/metadata.md has them exactly, and `npm test` expects them exactly, rejecting "now" and "word" in either.
+  - What's New (1.0.4) translated for the four translated listings:
+    - German: "Kleine Fehlerbehebungen und Verbesserungen."
+    - French: "Petites corrections et améliorations."
+    - Spanish (Spain): "Pequeñas correcciones y mejoras."
+    - Italian: "Piccole correzioni e miglioramenti."
+    - The other nine listings keep "Small fixes and improvements."
+  - CLAUDE.md brought up to date: the app is in the store (1.0.2 approved Nov 18, 1.0.3 on main, 1.0.4 is this PR); a store-listings line with the listing rules; a languages section (src/strings, src/i18n.ts, src/format.ts, src/locale.ts, the app.json declarations, what stays English); the pure-module list and the npm test line now name the language files and the listing check.
+  - Test: the listing check also runs English (U.S.) through the no-repeat rule. It pins the new English (U.S.) and Spanish (Mexico) fields and keeps "pdf filler" out of every new listing's name and subtitle. It fails if the old English (U.S.) field or the old pt-BR name comes back; both were tried.
+  - Checked: npx tsc --noEmit clean; npm test 47 pass; no em dashes in store/metadata.md, NOTES.md or CLAUDE.md.
+  - Noticed, not changed: Spanish (Mexico) keywords have had "form" next to "Forms" in its subtitle since 1.0.2, a plural repeat under the new rules. Only "now" was briefed for that field. If wanted, swapping "form" for "invoice" keeps it at 100 bytes.
+
 - 2026-11-25: 1.0.4 build 7, a keyword release: seven more English listings the U.S. App Store also indexes (branch claude/1.0.4-keywords, from main f75b2e8). No app code changes.
   - store/metadata.md, new section "Seven more English listings (new in 1.0.4)": a name, subtitle and keyword field for ar-SA, ko, pt-BR, ru, vi, zh-Hans and zh-Hant. The description, promotional text and links are copied from English (U.S.). English (U.S.), Spanish (Mexico), French, Italian, German and Spanish (Spain) are unchanged.
   - Brian's drafts were kept where they met his rules (ar-SA, ko, ru, zh-Hans). Three changed:

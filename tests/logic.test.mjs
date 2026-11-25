@@ -1099,16 +1099,35 @@ test('store listings: the seven new English listings keep the length, no-repeat,
     }
     const text = `${r.name} ${r.subtitle}`.toLowerCase();
     assert.ok(!/fill\s*(and|&)\s*sign/.test(text), `${loc} has "fill and sign"`);
+    // No new listing leads with a phrase close to a product name (pdfFiller).
+    assert.ok(!/pdf\s*filler/.test(text), `${loc} has "pdf filler" in its name or subtitle`);
     assert.ok(!/—/.test(`${r.name}${r.subtitle}${r.keywords}`), `${loc} has an em dash`);
   }
 
-  // English (U.S.) and Spanish (Mexico) are exactly as they were.
-  assert.match(md, /## Name \(28\/30\)\nElectronic Signature Creator\n/);
-  assert.match(md, /## Subtitle \(26\/30\)\nSign Documents & PDF Maker\n/);
-  assert.match(md, /\nesign,e,fill,form,filler,signer,editor,generator,now,draw,initials,contract,autograph,png,doc,word\n/);
-  assert.match(md, /Name \(30\/30\): Signature Maker: Sign PDF Docs\n/);
-  assert.match(md, /Subtitle \(30\/30\): eSign, Fill Forms & PDF Filler\n/);
-  assert.match(md, /\neditor,signer,document,electronic,creator,generator,form,e,now,contract,handwritten,stamp,digital\n/);
+  // English (U.S.) and Spanish (Mexico): names and subtitles as they were; the 1.0.4 keyword fields
+  // ("now" became "app" in both, and "word" became "lease" in English (U.S.)).
+  const EN = { name: 'Electronic Signature Creator', subtitle: 'Sign Documents & PDF Maker', keywords: 'esign,e,fill,form,filler,signer,editor,generator,app,draw,initials,contract,autograph,png,doc,lease' };
+  const MX = { name: 'Signature Maker: Sign PDF Docs', subtitle: 'eSign, Fill Forms & PDF Filler', keywords: 'editor,signer,document,electronic,creator,generator,form,e,app,contract,handwritten,stamp,digital' };
+  assert.ok(md.includes(`## Name (28/30)\n${EN.name}\n`));
+  assert.ok(md.includes(`## Subtitle (26/30)\n${EN.subtitle}\n`));
+  assert.ok(md.includes(`## Keywords, English (U.S.) (${Buffer.byteLength(EN.keywords)}/100)\n${EN.keywords}\n`));
+  assert.ok(md.includes(`Name (30/30): ${MX.name}\n`));
+  assert.ok(md.includes(`Subtitle (30/30): ${MX.subtitle}\n`));
+  assert.ok(md.includes(`Keywords (${Buffer.byteLength(MX.keywords)}/100), new in 1.0.4:\n${MX.keywords}\n`));
+  for (const [loc, r] of [['en-US', EN], ['es-MX', MX]]) {
+    assert.ok(Buffer.byteLength(r.keywords) <= 100 && !/\s/.test(r.keywords), `${loc} keywords`);
+    const kws = r.keywords.split(',');
+    assert.ok(!kws.includes('now') && !kws.includes('word'), `${loc} still has now or word`);
+    assert.ok(kws.includes('app'), `${loc} has no app`);
+    for (const w of [...words(r.name), ...words(r.subtitle), ...kws]) assert.ok(!brands.some((b) => w.includes(b)), `${loc} uses a product name: ${w}`);
+  }
+  // English (U.S.) meets the same no-repeat rule as the new listings. (Spanish (Mexico) has kept
+  // "form" next to its subtitle's "Forms" since 1.0.2; only "now" changed there, as briefed.)
+  const enSeen = new Set();
+  for (const w of [...words(EN.name), ...words(EN.subtitle), ...EN.keywords.split(',')]) {
+    assert.ok(!enSeen.has(stem(w)), `en-US repeats "${w}"`);
+    enSeen.add(stem(w));
+  }
 
   // Every target phrase sits whole in some name or subtitle, inside one piece between commas, colons and "&".
   const fields = {

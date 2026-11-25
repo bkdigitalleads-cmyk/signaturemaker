@@ -6,10 +6,25 @@ App #14 in Brian's iOS app portfolio (seller bkdigitalleads-cmyk). Expo SDK 57, 
 
 - App Store name: "Electronic Signature Creator" ("Electronic Signature Maker" was taken in App Store Connect). Subtitle "Sign Documents & PDF Maker", so "signature maker" indexes across the name and subtitle and "sign documents" and "sign pdf" stay exact. ASC app id 6830028405 (https://apps.apple.com/app/id6830028405). Home screen name and in-app name: "Signature Maker". Category Productivity, secondary Business. Bundle ID com.bwk.signaturemaker. Expo slug and scheme: signaturemaker. Owner bkdeveloper123. GitHub: bkdigitalleads-cmyk/signaturemaker.
 - Set up (Nov 3, 2026): eas.json `ascAppId` 6830028405, app.json `extra.eas.projectId` (project bkdeveloper123/signaturemaker) and app.json `extra.revenueCatApiKeyIos` (the public SDK key, starts with `appl_`, so purchases are on). The app runs with purchases off whenever the key does not start with `appl_`.
-- Not in the store yet. Version 1.0.0 build 1 is on branch claude/signature-1.0.0 (PR, not merged).
+- In the store. 1.0.2 (build 5) was approved on Nov 18, 2026. 1.0.3 build 6 (the app in German, French, Spanish and Italian) is on main. 1.0.4 build 7 is a keyword release with no app code changes (seven more English listings, new en-US and es-MX keyword fields); it is PR 7 on branch claude/1.0.4-keywords. NOTES.md has the history; App Store Connect status is tracked by Brian's Cowork session.
+- Store listings: store/metadata.md holds every listing's exact name, subtitle, keywords and What's New, ready to paste into App Store Connect. English (U.S.) is the main one. Spanish (Mexico) and, from 1.0.4, ar-SA, ko, pt-BR, ru, vi, zh-Hans and zh-Hant carry extra English words, because the U.S. App Store indexes those locales too. German, French, Spanish (Spain) and Italian are the translated listings. Listing rules (checked by `npm test`):
+  - A search phrase only forms inside one listing, so a target phrase sits whole in a name or subtitle.
+  - No word repeats inside a listing, and no plural of a word already there.
+  - Names and subtitles are at most 30 characters; keywords at most 100 bytes, comma separated, no spaces.
+  - No other signing or PDF product's name, and nothing close to one (no "now", so "sign now" never forms; no "fill and sign"; no "pdf filler" in a new listing's name or subtitle).
+  - Nothing the app does not do (no scan, scanner, camera, cloud, send, verify, legally binding, certified).
 - What it is: the fastest, best-looking way to make a signature on a phone, export it as a clean transparent PNG, and drop it onto a PDF. No account, no network, nothing leaves the phone.
 - Legal line, everywhere it appears (Settings About, the website, the App Review note): "Signature Maker creates a signature image and places it on your document. It does not verify identity or certify signatures." Never add identity verification, audit trails, document delivery, a cloud, an account or anything that claims a legally binding e-signature without Brian asking.
 - No brand word anywhere (app, store text, keywords, website): no other signing products or PDF software names.
+- Languages (since 1.0.3): the app's own text is in English (the default and the fallback), German, French, Spanish and Italian.
+  - Every word the app shows or reads out is in src/strings/en.ts, and de.ts, fr.ts, es.ts and it.ts have exactly its shape. A new string goes into all five; tsc fails on a missing one.
+  - Screens read words through `t` from src/i18n.ts, never as literals. A test fails on an English literal in an alert, toast, label or hint.
+  - Dates and numbers go through src/format.ts in the phone's locale. Prices stay StoreKit's own `priceString`.
+  - src/locale.ts reads expo-localization once, before App loads (index.ts).
+  - app.json declares the languages (the expo-localization plugin's `supportedLocales.ios`, which writes CFBundleLocalizations) and translates the Photos prompt through `locales` (assets/locales/<lang>.json).
+  - German uses du, French vous, Spanish and Italian tu/tú.
+  - Kept in English on purpose: the "Made with Signature Maker" mark, the "signed" in a signed copy's file name, the support email subject and "Signature Maker".
+  - The subscription disclosure must mean the same in every language.
 
 ## How shipping works (read before every push)
 
@@ -43,7 +58,7 @@ App #14 in Brian's iOS app portfolio (seller bkdigitalleads-cmyk). Expo SDK 57, 
 
 ## Testing
 
-- Type check: `npx tsc --noEmit`. Unit checks (stroke smoothing, pen widths and the outline, auto-crop bounds, view-to-PDF coordinates on rotated pages and different page sizes, pdf-lib flattening, free versus Pro, the library and recent lists, trial and plan rules, the rating guard): `npm test`. Bundle check: `npx expo export --platform ios`. Config: `npx expo config --type introspect`.
-- Pure logic lives in src/stroke.ts, src/placement.ts, src/flatten.ts, src/gates.ts, src/library.ts, src/fonts.ts, src/rules.ts and src/offer.ts, with no React or native imports (they import each other with a `.ts` extension so Node runs them directly), so `npm test` checks exactly what the app runs.
+- Type check: `npx tsc --noEmit`. Unit checks (stroke smoothing, pen widths and the outline, auto-crop bounds, view-to-PDF coordinates on rotated pages and different page sizes, pdf-lib flattening, free versus Pro, the library and recent lists, trial and plan rules, the rating guard, the five languages and the disclosure in each, the store listings in store/metadata.md): `npm test`. Bundle check: `npx expo export --platform ios`. Config: `npx expo config --type introspect`.
+- Pure logic lives in src/stroke.ts, src/placement.ts, src/flatten.ts, src/gates.ts, src/library.ts, src/fonts.ts, src/rules.ts, src/offer.ts, src/i18n.ts, src/format.ts and src/strings/*.ts, with no React or native imports (they import each other with a `.ts` extension so Node runs them directly), so `npm test` checks exactly what the app runs.
 - Simulator (needs Xcode): `npx expo start --ios` does not work in Expo Go (Skia, react-native-pdf and RevenueCat need a development build). Purchases do not complete in the simulator.
 - Real-device check: TestFlight build from the EAS workflow, on Brian's iPhone. Skia drawing and its feel, Apple Pencil, react-native-pdf page rendering, the "Open in" route from Mail and Files, Photos saving, the clipboard, haptics, Dynamic Type and VoiceOver can only be judged there. NOTES.md has the TestFlight checklist.
